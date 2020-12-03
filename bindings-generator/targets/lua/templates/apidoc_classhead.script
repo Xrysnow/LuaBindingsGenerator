@@ -1,0 +1,36 @@
+#set generator = $current_class.generator
+--------------------------------
+-- @module ${current_class.class_name}
+#set $parents_count = len($current_class.parents)
+#if $parents_count > 0
+    #set $extend_info = "@extend "
+    #set $parent_index = 0
+    #for $parent in $current_class.parents
+        #if $parent_index < $parents_count - 1
+            #set $extend_info = $extend_info + $parent.class_name + ","
+        #else
+            #set $extend_info = $extend_info + $parent.class_name
+        #end if
+        #set parent_index = parent_index + 1
+    #end for
+-- $extend_info
+#end if
+-- @parent_module ${generator.target_ns}
+
+#if $parents_count > 0
+    #set $extend_info = ""
+    #set $parent_index = 0
+    #for $parent in $current_class.parents
+        #if $parent_index < $parents_count - 1
+            #set $extend_info = $extend_info + $generator.target_ns + "."+ $parent.class_name + ","
+        #else
+            #set $extend_info = $extend_info + $generator.target_ns + "."+ $parent.class_name
+        #end if
+        #set parent_index = parent_index + 1
+    #end for
+---@class ${generator.target_ns}.${current_class.class_name}:$extend_info
+#else
+---@class ${generator.target_ns}.${current_class.class_name}
+#end if
+local ${current_class.class_name} = {}
+${generator.target_ns}.${current_class.class_name} = ${current_class.class_name}

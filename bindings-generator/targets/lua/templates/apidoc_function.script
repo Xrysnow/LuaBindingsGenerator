@@ -1,0 +1,43 @@
+--------------------------------
+
+--- ${comment}
+#if $min_args > 0 
+    #set $count = 0
+    #for $arg in $arguments
+        #set $argValue = "arg" + str(count)
+        #if $arg.is_enum
+---@param $argumtntTips[$count] number
+        #else
+---@param $argumtntTips[$count] $generator.lua_typename_from_natve($arg.namespaced_name, False, $arg)
+        #end if
+        #set $count = $count + 1
+    #end for
+#end if
+#if str($ret_type) != "void"
+    #if $ret_type.is_enum
+---@return number
+    #else
+---@return $generator.lua_typename_from_natve($ret_type.namespaced_name, True)
+    #end if
+#else
+---@return $generator.lua_typename_from_natve($namespaced_class_name, True)
+#end if
+#set $fargs = ""
+#if $min_args > 0 
+    #set $count = 0
+    #for $arg in $arguments
+        #if $count == 0
+            #set $fargs = $fargs + $argumtntTips[$count]
+        #else
+            #set $fargs = $fargs + ", " + $argumtntTips[$count]
+        #end if
+        #set $count = $count + 1
+    #end for
+#end if
+#set $fname = $func_name
+#if $fname == "end"
+    #set $fname = "endToLua"
+#end if
+function ${class_name}:${fname}(${fargs})
+end
+

@@ -1,0 +1,14 @@
+
+#if $current_class.nested_enums
+#for enum in $current_class.nested_enums
+--------------------------------
+
+local ${enum.class_name} = {}
+--- ${enum.comment}
+${current_class.class_name}.${enum.class_name} = ${enum.class_name}
+#for m in $enum.fields
+--- ${m['comment']}
+${enum.class_name}.${m['name']} = ${m['value']}
+#end for
+#end for
+#end if

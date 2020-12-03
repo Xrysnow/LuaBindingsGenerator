@@ -1,0 +1,18 @@
+--------------------------------
+
+--- ${comment}
+#if str($ntype) != "void"
+    #if $ntype.is_enum
+---@type number
+    #else
+		#set $native_type = $generator.lua_typename_from_natve($ntype.namespaced_name)
+		#if str($native_type) == "color4b_table"
+			#set $native_type = "lstg.Color"
+		#end if
+---@type $native_type
+    #end if
+#else
+---@type any
+#end if
+${class_name}.${name} = nil
+

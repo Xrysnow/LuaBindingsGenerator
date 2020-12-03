@@ -1,0 +1,5 @@
+#include "cocos2d.h"
+#include "2d/CCFontAtlasCache.h"
+#include "2d/CCFontCharMap.h"
+#include "2d/CCFontFNT.h"
+#include "2d/CCFontFreeType.h"
