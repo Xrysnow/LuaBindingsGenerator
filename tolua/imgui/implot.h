@@ -542,16 +542,17 @@ IMPLOT_API void EndLegendPopup();
 // Plot and Item Styling
 //-----------------------------------------------------------------------------
 
-// Provides access to plot style structure for permanant modifications to colors, sizes, etc.
+//@lua fix
+/** Provides access to plot style structure for permanant modifications to colors, sizes, etc. */
 IMPLOT_API ImPlotStyle& GetStyle();
 
-// Style colors for current ImGui style (default).
+/** Style colors for current ImGui style (default). */
 IMPLOT_API void StyleColorsAuto(/*ImPlotStyle* dst = NULL*/);
-// Style colors for ImGui "Classic".
+/** Style colors for ImGui "Classic". */
 IMPLOT_API void StyleColorsClassic(/*ImPlotStyle* dst = NULL*/);
-// Style colors for ImGui "Dark".
+/** Style colors for ImGui "Dark". */
 IMPLOT_API void StyleColorsDark(/*ImPlotStyle* dst = NULL*/);
-// Style colors for ImGui "Light".
+/** Style colors for ImGui "Light". */
 IMPLOT_API void StyleColorsLight(/*ImPlotStyle* dst = NULL*/);
 
 // Use PushStyleX to temporarily modify your ImPlotStyle. The modification
@@ -640,6 +641,7 @@ IMPLOT_API const char* GetColormapName(ImPlotColormap colormap);
 // Miscellaneous
 //-----------------------------------------------------------------------------
 
+//@lua fix
 /** Allows changing how keyboard/mouse interaction works. */
 IMPLOT_API ImPlotInputMap& GetInputMap();
 

@@ -491,7 +491,7 @@ public:
 	/**  call to mark popup as open (don't call every frame!). */
     IMGUI_API void          OpenPopup(const char* str_id, ImGuiPopupFlags popup_flags = 0);
 	/**  helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors) */
-    IMGUI_API bool          OpenPopupOnItemClick(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
+    IMGUI_API void          OpenPopupOnItemClick(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);
 	/**  manually close the popup we have begin-ed into. */
     IMGUI_API void          CloseCurrentPopup();
 
