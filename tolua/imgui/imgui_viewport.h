@@ -2,10 +2,15 @@
 
 namespace imgui
 {
-
-/// The viewports created and managed by Dear ImGui. The role of the platform back-end is to create the platform/OS windows corresponding to each viewport.
-/// - Main Area = entire viewport.
-/// - Work Area = entire viewport minus sections optionally used by menu bars, status bars. Some positioning code will prefer to use this. Window are also trying to stay within this area.
+/**
+* - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
+* - With multi-viewport enabled, we extend this concept to have multiple active viewports.
+* - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
+* - About Main Area vs Work Area:
+*   - Main Area = entire viewport.
+*   - Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).
+*   - Windows are generally trying to stay within the Work Area of their host viewport.
+*/
 class ImGuiViewport
 {
 public:
@@ -13,21 +18,20 @@ public:
     ImGuiID             ID;
 	/** See ImGuiViewportFlags_ */
     ImGuiViewportFlags  Flags;
-	/** Main Area: Position of the viewport (the imgui coordinates are the same as OS desktop/native coordinates) */
+	/** Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates) */
     ImVec2              Pos;
 	/** Main Area: Size of the viewport. */
     ImVec2              Size;
-    /** Work Area: Offset from Pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside Pos/Size!) */
-    ImVec2              WorkOffsetMin;
-    /** Work Area: Offset from Pos+Size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height). */
-    ImVec2              WorkOffsetMax;
- 
+    /** Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos) */
+    ImVec2              WorkPos;
+    /** Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size) */
+    ImVec2              WorkSize;
 	/** 1.0f = 96 DPI = No extra scale. */
     float               DpiScale;
-	/** The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame(). */
-    //ImDrawData*         DrawData;
 	/** (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows. */
     ImGuiID             ParentViewportId;
+	/** The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame(). */
+    //ImDrawData*         DrawData;
 
     // Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.
     // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
@@ -50,10 +54,10 @@ public:
     // ImGuiViewport()     { ID = 0; Flags = 0; DpiScale = 0.0f; DrawData = NULL; ParentViewportId = 0; RendererUserData = PlatformUserData = PlatformHandle = NULL; PlatformRequestClose = PlatformRequestMove = PlatformRequestResize = false; }
     // ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
 
-    // Access work-area rectangle with GetWorkXXX functions (see comments above)
-    ImVec2              GetCenter();
-    ImVec2              GetWorkPos();
-    ImVec2              GetWorkSize();
+    // Helpers
+
+    ImVec2              GetCenter() const;
+    ImVec2              GetWorkCenter() const;
 };
 
 }

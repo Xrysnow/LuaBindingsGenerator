@@ -38,6 +38,8 @@ public:
     ImVec2      ItemSpacing;
     /** Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label). */
     ImVec2      ItemInnerSpacing;
+    /** Padding within a table cell */
+    ImVec2      CellPadding;
     /** Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much! */
     ImVec2      TouchExtraPadding;
     /** Horizontal indentation when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2). */
@@ -83,7 +85,7 @@ public:
     /**
     * Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     */
-    float CircleSegmentMaxError;
+    float CircleTessellationMaxError;
 
     //ImVec4      Colors[ImGuiCol_COUNT];
 	

@@ -28,12 +28,12 @@ public:
 	*/
     float           SizePixels;
 	/** 
-	* Rasterize at higher quality for sub-pixel positioning. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
+	* Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
 	* 3
 	*/
     int             OversampleH;
 	/** 
-	* Rasterize at higher quality for sub-pixel positioning. We don't use sub-pixel positions on the Y axis.
+	* Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
 	* 1
 	*/
     int             OversampleV;
@@ -68,10 +68,10 @@ public:
 	*/
     bool            MergeMode;
 	/** 
-	* Settings for custom font rasterizer (e.g. ImGuiFreeType). Leave as zero if you aren't using one.
-	* 0x00
+	* Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
+	* 0
 	*/
-    unsigned int    RasterizerFlags;
+    unsigned int    FontBuilderFlags;
 	/** 
 	*  Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
 	*   1.0f     
@@ -87,11 +87,15 @@ class ImFontGlyph
 {
 public:
 	/** 
-	*  0x0000..0xFFFF
+	*  Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
+	*/
+    unsigned int         Colored;
+	/** 
+	*  0x0000..0x10FFFF
 	*/
     unsigned int         Codepoint;
 	/** 
-	*  Flag to allow early out when rendering
+	*  Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
 	*/
     unsigned int         Visible;
 	/** 
@@ -252,11 +256,12 @@ public:
     //-------------------------------------------
 
 	// You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
-    // After calling Build(), you can query the rectangle position and render your pixels.
-    // You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
-    // so you can render e.g. custom colorful icons and use them as regular glyphs.
-    // Read docs/FONTS.md for more details about using colorful icons.
-    // Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
+    // - After calling Build(), you can query the rectangle position and render your pixels.
+    // - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+    // - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
+    //   so you can render e.g. custom colorful icons and use them as regular glyphs.
+    // - Read docs/FONTS.md for more details about using colorful icons.
+    // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
 
     IMGUI_API int       AddCustomRectRegular(int width, int height);
 
@@ -268,10 +273,6 @@ public:
     // Members
     //-------------------------------------------
 
-	/** 
-	*  Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
-	*/
-    bool                        Locked;
 	/** 
 	*  Build flags (see ImFontAtlasFlags_)
 	*/
@@ -288,6 +289,10 @@ public:
 	*  Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0.
 	*/
     int                         TexGlyphPadding;
+	/** 
+	*  Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
+	*/
+    bool                        Locked;
 };
 
 /**

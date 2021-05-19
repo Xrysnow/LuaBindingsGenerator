@@ -25,7 +25,7 @@ public:
 	/** See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
 	* = 0 */
     ImGuiBackendFlags  BackendFlags;
-	/** Main display size, in pixels.
+	/** Main display size, in pixels (generally == GetMainViewport()->Size)
 	* <unset>         */
     ImVec2      DisplaySize;
 	/** Time elapsed since last frame, in seconds.
@@ -85,9 +85,6 @@ public:
 	/** Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.
 	* = false */
     bool        ConfigDockingNoSplit;
-	/** Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)
-	* = false */
-    bool        ConfigDockingWithShift;
 	/**
     * [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
     * = false
@@ -117,20 +114,23 @@ public:
 	/** Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
 	* = false         */
     bool        MouseDrawCursor;
-	/** OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl (was called io.OptMacOSXBehaviors prior to 1.63)
+	/** OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl
 	* = defined(__APPLE__) */
     bool        ConfigMacOSXBehaviors;
-	/** Set to false to disable blinking cursor, for users who consider it distracting. (was called: io.OptCursorBlink prior to 1.63)
+	/** Enable blinking cursor (optional as some users consider it to be distracting).
 	* = true          */
     bool        ConfigInputTextCursorBlink;
+	/** [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
+	* = false          */
+	bool        ConfigDragClickToInputText;
 	/** Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
 	* = true          */
     bool        ConfigWindowsResizeFromEdges;
-	/** [BETA] Set to true to only allow moving windows when clicked+dragged from the title bar. Windows without a title bar are not affected.
+	/** Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
 	* = false      */
     bool        ConfigWindowsMoveFromTitleBarOnly;
 	/**
-    * [BETA] Free transient windows/tables memory buffers when unused for given amount of time. Set to -1.0f to disable.
+    * Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
     * = 60.0f
     */
     float       ConfigMemoryCompactTimer;
