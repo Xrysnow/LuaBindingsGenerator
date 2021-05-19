@@ -1,4 +1,5 @@
-TOLUA_API int register_all_${prefix}(lua_State* tolua_S)
+
+int register_all_${prefix}(lua_State* tolua_S)
 {
 	tolua_open(tolua_S);
 

@@ -270,6 +270,7 @@ def _get_comment(comment):
         return ""
 
     regular_replace_list = [
+        # ("^///",""), # comments start with ///
         ("(\s)*//!",""),
         ("(\s)*//",""),
         ("(\s)*/\*\*",""),
@@ -289,7 +290,7 @@ def _get_comment(comment):
     for item in regular_replace_list:
         replaceStr = re.sub(item[0], item[1], replaceStr)
 
-    return replaceStr
+    return replaceStr.rstrip()
 
 class BaseEnumeration(object):
     """
@@ -633,9 +634,9 @@ class NativeType(object):
 
         if self.is_object:
             if not NativeType.dict_has_key_re(from_native_dict, keys):
-                keys.append("object")
+                keys.append("object" if not generator.convert_legacy else "object_legacy")
         elif self.is_enum:
-            keys.append("int")
+            keys.append("enum" if not generator.convert_legacy else "enum_legacy")
 
         if NativeType.dict_has_key_re(from_native_dict, keys):
             tpl = NativeType.dict_get_value_re(from_native_dict, keys)
@@ -657,9 +658,9 @@ class NativeType(object):
         to_native_dict = generator.config['conversions']['to_native']
         if self.is_object:
             if not NativeType.dict_has_key_re(to_native_dict, keys):
-                keys.append("object")
+                keys.append("object" if not generator.convert_legacy else "object_legacy")
         elif self.is_enum:
-            keys.append("int")
+            keys.append("enum" if not generator.convert_legacy else "enum_legacy")
 
         if self.is_function:
             tpl = Template(file=os.path.join(generator.target, "templates", "lambda.c"),
@@ -1074,7 +1075,6 @@ class NativeClass(object):
         self.namespace_name   = ""
 
         registration_name = generator.get_class_or_rename_class(self.class_name)
-        print('NativeClass: ' + registration_name)
         if generator.remove_prefix:
             self.target_class_name = re.sub('^' + generator.remove_prefix, '', registration_name)
         else:
@@ -1082,6 +1082,7 @@ class NativeClass(object):
         self.namespaced_class_name = get_namespaced_name(cursor)
         self.namespace_name        = get_namespace_name(cursor)
         self.parse()
+        print('NativeClass: ' + registration_name, self.namespace_name, self.namespaced_class_name)
 
     @property
     def underlined_class_name(self):
@@ -1438,6 +1439,8 @@ class Generator(object):
         self.hpp_headers = opts['hpp_headers']
         self.cpp_headers = opts['cpp_headers']
         self.win32_clang_flags = opts['win32_clang_flags']
+        self.extra_layout_head = opts['extra_layout_head']
+        self.convert_legacy = opts['convert_legacy']
 
         extend_clang_args = []
 
@@ -1727,6 +1730,8 @@ class Generator(object):
                         nclass.nested_enums = nested_enums
                         nclass.generate_code()
                         self.generated_classes[cursor.displayname] = nclass
+                    else:
+                        nclass = None
                     ## get enum in class
                     inclass = nclass
                     # return
@@ -1759,6 +1764,8 @@ class Generator(object):
         if namespace_class_name.find("::") >= 0:
             if namespace_class_name.find("std::") == 0:
                 return namespace_class_name
+            elif namespace_class_name.find("const std::") == 0:
+                return namespace_class_name.replace("const ", "")
             else:
                 raise Exception("The namespace (%s) conversion wasn't set in 'ns_map' section of the conversions.yaml" % namespace_class_name)
         else:
@@ -2037,8 +2044,9 @@ def main():
             print "\n.... .... Processing section", s, "\n"
             gen_opts = {
                 'prefix': config.get(s, 'prefix'),
-                'headers':    (config.get(s, 'headers'        , 0, dict(userconfig.items('DEFAULT')))),
+                'headers': (config.get(s, 'headers', 0, dict(userconfig.items('DEFAULT')))),
                 'replace_headers': config.get(s, 'replace_headers') if config.has_option(s, 'replace_headers') else None,
+                'extra_layout_head': config.get(s, 'extra_layout_head') if config.has_option(s, 'extra_layout_head') else None,
                 'classes': config.get(s, 'classes').split(' '),
                 'classes_need_extend': config.get(s, 'classes_need_extend').split(' ') if config.has_option(s, 'classes_need_extend') else [],
                 'clang_args': (config.get(s, 'extra_arguments', 0, dict(userconfig.items('DEFAULT'))) or "").split(" "),
@@ -2061,7 +2069,8 @@ def main():
                 'macro_judgement': config.get(s, 'macro_judgement') if config.has_option(s, 'macro_judgement') else None,
                 'hpp_headers': config.get(s, 'hpp_headers', 0, dict(userconfig.items('DEFAULT'))).split(' ') if config.has_option(s, 'hpp_headers') else None,
                 'cpp_headers': config.get(s, 'cpp_headers', 0, dict(userconfig.items('DEFAULT'))).split(' ') if config.has_option(s, 'cpp_headers') else None,
-                'win32_clang_flags': (config.get(s, 'win32_clang_flags', 0, dict(userconfig.items('DEFAULT'))) or "").split(" ") if config.has_option(s, 'win32_clang_flags') else None
+                'win32_clang_flags': (config.get(s, 'win32_clang_flags', 0, dict(userconfig.items('DEFAULT'))) or "").split(" ") if config.has_option(s, 'win32_clang_flags') else None,
+                'convert_legacy': config.get(s, 'convert_legacy') if config.has_option(s, 'convert_legacy') else None
                 }
             generator = Generator(gen_opts)
             generator.generate_code()

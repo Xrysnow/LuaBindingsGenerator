@@ -4,15 +4,16 @@
 -- @module ${current_class.class_name}
 -- @parent_module ${generator.target_ns}
 
---- Enum ${generator.target_ns}.${current_class.class_name}
----@class ${generator.target_ns}.${current_class.class_name}
-local ${current_class.class_name} = {}
-${generator.target_ns}.${current_class.class_name} = ${current_class.class_name}
+--- ${current_class.comment}
+---@class ${generator.target_ns}.${current_class.target_class_name}
+local ${current_class.target_class_name} = {}
+${generator.target_ns}.${current_class.target_class_name} = ${current_class.target_class_name}
 
 #set fields = $current_class.fields
 #for m in fields
+--- ${m['comment']}
 ---@type number
-${current_class.class_name}.${m['name']} = ${m['value']}
+${current_class.target_class_name}.${m['name']} = ${m['value']}
 #end for
 
 return nil

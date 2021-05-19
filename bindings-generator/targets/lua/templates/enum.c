@@ -4,20 +4,20 @@
 
 int lua_register_${generator.prefix}_${current_class.class_name}(lua_State* tolua_S)
 {
-    #for p in parents
-    tolua_module(tolua_S, "${p.class_name}", 0);
-    tolua_beginmodule(tolua_S, "${p.class_name}");
-    #end for
+	#for p in parents
+	tolua_module(tolua_S, "${p.class_name}", 0);
+	tolua_beginmodule(tolua_S, "${p.class_name}");
+	#end for
 
-    tolua_module(tolua_S, "${current_class.target_class_name}", 0);
-    tolua_beginmodule(tolua_S,"${current_class.target_class_name}");
-    #for m in fields
-        tolua_constant(tolua_S, "${m['name']}", (lua_Number)${current_class.namespaced_class_name}::${m['name']});
-    #end for
-    tolua_endmodule(tolua_S);
+	tolua_module(tolua_S, "${current_class.target_class_name}", 0);
+	tolua_beginmodule(tolua_S,"${current_class.target_class_name}");
+	#for m in fields
+		tolua_constant(tolua_S, "${m['name']}", (lua_Number)${current_class.namespaced_class_name}::${m['name']});
+	#end for
+	tolua_endmodule(tolua_S);
 
-    #for p in parents
-    tolua_endmodule(tolua_S);
-    #end for
-    return 1;
+	#for p in parents
+	tolua_endmodule(tolua_S);
+	#end for
+	return 1;
 }
