@@ -143,38 +143,38 @@ def main():
 
         cmd_args = {
             #'cocos2dx_ui.ini' : ('cocos2dx_ui', 'lua_cocos2dx_ui_auto'),
-            #'cc_font.ini' : ('cc_font', 'lua_cocos2dx_font_auto'),
-            #'cocos2dx_configuration.ini' : ('cocos2dx_configuration', 'lua_cocos2dx_configuration_auto'),
-            #'x_L2D.ini' : ('L2D', 'lua_L2D_auto'),
-            #'x_Latex.ini' : ('x_Latex', 'lua_Latex_auto'),
-            #'x_Resource.ini' : ('x_Resource', 'lua_Resource_auto'),
-            #'x_RenderMode.ini' : ('x_RenderMode', 'lua_RenderMode_auto'),
-            #'x_LogSystem.ini' : ('x_LogSystem', 'lua_LogSystem_auto'),
-            #'x_BentLaser.ini' : ('x_BentLaser', 'lua_BentLaser_auto'),
-            #'x_Random.ini' : ('x_Random', 'lua_Random_auto'),
-            #'x_ObjSym.ini' : ('x_ObjSym', 'lua_ObjSym_auto'),
-            #'x_FileDialog.ini' : ('x_FileDialog', 'lua_FileDialog_auto'),
-            #'x_WindowHelper.ini' : ('x_WindowHelper', 'lua_WindowHelper_auto'),
-            #'x_ParticlePool.ini' : ('x_ParticlePool', 'lua_ParticlePool_auto'),
-            #'x_ResourceMgr.ini' : ('x_ResourceMgr', 'lua_ResourceMgr_auto'),
-            #'x_Triangles.ini' : ('x_Triangles', 'lua_Triangles_auto'),
-            #'x_Stream.ini' : ('x_Stream', 'lua_Stream_auto'),
-            #'x_Buffer.ini' : ('x_Buffer', 'lua_Buffer_auto'),
-            #'imgui/x_imgui.ini' : ('x_imgui', 'lua_imgui_auto'),
-            #'imgui/x_imguiStyle.ini' : ('x_imguiStyle', 'lua_imguiStyle_auto'),
-            #'imgui/x_imguiIO.ini' : ('x_imguiIO', 'lua_imguiIO_auto'),
-            #'imgui/x_imguiFont.ini' : ('x_imguiFont', 'lua_imguiFont_auto'),
-            #'imgui/x_imguiDrawList.ini' : ('x_imguiDrawList', 'lua_imguiDrawList_auto'),
-            #'imgui/x_imguiViewport.ini' : ('x_imguiViewport', 'lua_imguiViewport_auto'),
-            #'imgui/x_implot.ini' : ('x_implot', 'lua_implot_auto'),
+            # 'cc_font.ini' : ('cc_font', 'lua_cc_font_auto'),
+            # 'cc_configuration.ini' : ('cc_configuration', 'lua_cc_configuration_auto'),
+            # 'x_L2D.ini' : ('L2D', 'lua_live2d_auto'),
+            # 'x_Latex.ini' : ('x_Latex', 'lua_Latex_auto'),
+            # 'x_Resource.ini' : ('x_Resource', 'lua_Resource_auto'),
+            # 'x_RenderMode.ini' : ('x_RenderMode', 'lua_RenderMode_auto'),
+            # 'x_LogSystem.ini' : ('x_LogSystem', 'lua_LogSystem_auto'),
+            # 'x_BentLaser.ini' : ('x_BentLaser', 'lua_BentLaser_auto'),
+            # 'x_Random.ini' : ('x_Random', 'lua_Random_auto'),
+            # 'x_ObjSym.ini' : ('x_ObjSym', 'lua_ObjSym_auto'),
+            # 'x_FileDialog.ini' : ('x_FileDialog', 'lua_FileDialog_auto'),
+            # 'x_WindowHelper.ini' : ('x_WindowHelper', 'lua_WindowHelper_auto'),
+            # 'x_ParticlePool.ini' : ('x_ParticlePool', 'lua_ParticlePool_auto'),
+            # 'x_ResourceMgr.ini' : ('x_ResourceMgr', 'lua_ResourceMgr_auto'),
+            # 'x_Triangles.ini' : ('x_Triangles', 'lua_Triangles_auto'),
+            # 'x_Stream.ini' : ('x_Stream', 'lua_Stream_auto'),
+            # 'x_Buffer.ini' : ('x_Buffer', 'lua_Buffer_auto'),
+            # 'imgui/x_imgui.ini' : ('x_imgui', 'lua_imgui_auto'),
+            # 'imgui/x_imguiStyle.ini' : ('x_imguiStyle', 'lua_imguiStyle_auto'),
+            # 'imgui/x_imguiIO.ini' : ('x_imguiIO', 'lua_imguiIO_auto'),
+            # 'imgui/x_imguiFont.ini' : ('x_imguiFont', 'lua_imguiFont_auto'),
+            # 'imgui/x_imguiDrawList.ini' : ('x_imguiDrawList', 'lua_imguiDrawList_auto'),
+            # 'imgui/x_imguiViewport.ini' : ('x_imguiViewport', 'lua_imguiViewport_auto'),
+            # 'imgui/x_implot.ini' : ('x_implot', 'lua_implot_auto'),
             #'x_ImGuiColorTextEdit.ini' : ('x_ImGuiColorTextEdit', 'lua_ImGuiColorTextEdit_auto'),
-            #'x_Audio.ini' : ('x_Audio', 'lua_Audio_auto'),
-            #'x_StopWatch.ini' : ('x_StopWatch', 'lua_StopWatch_auto'),
-            #'x_ZipArchive.ini' : ('x_ZipArchive', 'lua_ZipArchive_auto'),
-            #'cc_video.ini' : ('cc_video', 'lua_video_auto'),
-            #'cc_ext.ini' : ('cc_ext', 'lua_cc_ext_auto'),
-            #'cocos2dx_extension.ini' : ('cocos2dx_extension', 'lua_cocos2dx_extension_auto'),
-            #'x_cq.ini' : ('x_cq', 'lua_cq_auto'),
+            # 'x_Audio.ini' : ('x_Audio', 'lua_audio_auto'),
+            # 'x_StopWatch.ini' : ('x_StopWatch', 'lua_StopWatch_auto'),
+            # 'x_ZipArchive.ini' : ('x_ZipArchive', 'lua_ZipArchive_auto'),
+            # 'cc_video.ini' : ('cc_video', 'lua_video_auto'),
+            # 'cc_ext.ini' : ('cc_ext', 'lua_cc_ext_auto'),
+            # 'cocos2dx_extension.ini' : ('cocos2dx_extension', 'lua_cocos2dx_extension_auto'),
+            # 'x_cq.ini' : ('x_cq', 'lua_cq_auto'),
             }
         target = 'lua'
         generator_py = '%s/generator.py' % cxx_generator_root
@@ -182,8 +182,8 @@ def main():
             args = cmd_args[key]
             cfg = '%s/%s' % (tolua_root, key)
             print 'Generating bindings for %s...' % (key[:-4])
-            out_dir = output_dir + args[0]
-            command = '%s %s %s -s %s -t %s -o %s -n %s' % (python_bin, generator_py, cfg, args[0], target, output_dir, args[1])
+            out_dir = output_dir + '/' + args[0]
+            command = '%s %s %s -s %s -t %s -o %s -n %s' % (python_bin, generator_py, cfg, args[0], target, out_dir, args[1])
             _run_cmd(command)
 
         print '---------------------------------'
