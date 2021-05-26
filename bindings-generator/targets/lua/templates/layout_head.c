@@ -4,11 +4,15 @@ $macro_judgement
 #end if
 #for header in $headers
 	#set relative = os.path.relpath(header, $search_path)
-	#if not '..' in relative
-\#include "${relative.replace(os.path.sep, '/')}"
-	#else
-\#include "${os.path.basename(header)}"
+		#if not '..' in relative
+			#set header_str = $relative.replace(os.path.sep, '/')
+		#else
+			#set header_str = os.path.basename(header)
+		#end if
+	#if header_str in $replace_headers
+		#set header_str = $replace_headers[header_str]
 	#end if
+\#include "${header_str}"
 #end for
 \#include "scripting/lua-bindings/manual/tolua_fix.h"
 \#include "scripting/lua-bindings/manual/LuaBasicConversions.h"

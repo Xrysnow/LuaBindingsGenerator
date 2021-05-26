@@ -1,13 +1,13 @@
+#if $generator.convert_legacy
 int handler${arg_idx} = toluafix_ref_function(tolua_S, ${arg_idx}, 0);
 ok &= handler${arg_idx} != 0;
-if(ok)
-{
+if(ok) {
 	#set $param_count = len($param_types)
 	#set $param_str = []
 	#set $count = 0
 	#while $count < $param_count
 	#set $param = $param_types[$count]
-	#set _ = $param_str.append($param_types[$count].name + " param" + str($count))
+	#set _ = $param_str.append($param_types[$count].namespaced_name + " param" + str($count))
 	#set $count = $count + 1
 	#end while
 	#set $param_str = ", ".join($param_str)
@@ -17,16 +17,15 @@ if(ok)
 		#set $ret_str = ""
 		#if $ret_type.name != "void"
 			#if $ret_type.is_enum
-			#set $ret_str = "($ret_type.get_whole_name($generator))ret"
+			#set $ret_str = "(${ntype.to_string($generator)})ret"
 		int ret = {};
 			#else
 			#set $ret_str = "ret"
-		${ret_type.get_whole_name($generator)} ret = {};
+		${ntype.to_string($generator)} ret = {};
 			#end if
 		#end if
 		toluafix_get_function_by_refid(tolua_S, handler${arg_idx});
-		if (!lua_isfunction(tolua_S, -1))
-		{
+		if (!lua_isfunction(tolua_S, -1)) {
 			lua_pop(tolua_S, 1);
 			return ${ret_str};
 		}
@@ -59,6 +58,8 @@ if(ok)
 			"ntype": $ret_type.namespaced_name.replace("*", ""),
 			"scriptname": $generator.scriptname_from_native($ret_type.namespaced_name, $ret_type.namespace_name)})};
 		lua_pop(tolua_S, 1);
+		if (!ok)
+			luaL_error(tolua_S, "invalid return value in handler (%s)", LUA_FNAME);
 		#else
 		lua_call(tolua_S, ${param_count}, 0);
 		#end if
@@ -67,3 +68,8 @@ if(ok)
 		#end if
 	};
 }
+#else
+ok &= luaval_to_native(tolua_S, ${arg_idx}, &${out_value}, LUA_FNAME);
+int handler${arg_idx} = query_luafunction_handler(tolua_S, ${arg_idx}, LUA_FNAME);
+ok &= handler${arg_idx} != 0
+#end if

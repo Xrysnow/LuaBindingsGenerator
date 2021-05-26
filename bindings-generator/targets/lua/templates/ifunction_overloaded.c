@@ -1,6 +1,6 @@
 ## ===== instance function implementation template - for overloaded functions
 #set func_cobj_type = $generator.scriptname_from_native($namespaced_class_name, $namespace_name)
-#set func_lua_name = func_cobj_type + ':' + $implementations[0].func_name
+#set func_lua_name = func_cobj_type + ':' + $implementations[0].reg_name
 int ${signature_name}(lua_State* tolua_S)
 {
 	bool ok = true;
@@ -35,13 +35,13 @@ int ${signature_name}(lua_State* tolua_S)
 							 "class_name": $class_name,
 							 "lua_namespaced_class_name": $generator.scriptname_from_native($namespaced_class_name, $namespace_name),
 							 "func_name": "LUA_FNAME",
-							 "level": 2,
+							 "level": 3,
 							 "arg":$arg,
 							 "ntype": $arg.namespaced_name.replace("*", ""),
 							 "scriptname": $generator.scriptname_from_native($arg.namespaced_name, $arg.namespace_name)})};
 				#set $arg_array += ["arg"+str(count)]
 				#set $count = $count + 1
-			#if $arg_idx >= 0
+			#if $arg_idx > 0
 			if (!ok) { break; }
 			#end if
 			#end while
@@ -65,23 +65,24 @@ int ${signature_name}(lua_State* tolua_S)
 #end if
 			return 1;
 		#else
+			#set func_invoke = "cobj->%s(%s)" % ($func.func_name, $arg_list)
 			#if $func.ret_type.name != "void"
-				#if $func.ret_type.is_enum
-			auto ret = cobj->${func.func_name}($arg_list);
-				#else
-			auto ret = cobj->${func.func_name}($arg_list);
-				#end if
+#if $generator.convert_legacy
+			auto ret = ${func_invoke};
 			${func.ret_type.from_native({"generator": $generator,
 													  "in_value": "ret",
 													  "out_value": "ret",
 													  "type_name": $func.ret_type.namespaced_name.replace("*", ""),
 													  "ntype": $func.ret_type.get_whole_name($generator),
 													  "class_name": $class_name,
-													  "level": 2,
+													  "level": 3,
 													  "scriptname": $generator.scriptname_from_native($func.ret_type.namespaced_name, $func.ret_type.namespace_name)})};
+#else
+			native_to_luaval(tolua_S, ${func_invoke});
+#end if
 			return 1;
 			#else
-			cobj->${func.func_name}($arg_list);
+			${func_invoke};
 			lua_settop(tolua_S, 1);
 			return 1;
 			#end if

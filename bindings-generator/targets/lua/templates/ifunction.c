@@ -1,9 +1,11 @@
 ## ===== instance function implementation template
 #set func_cobj_type = $generator.scriptname_from_native($namespaced_class_name, $namespace_name)
-#set func_lua_name = func_cobj_type + ':' + $func_name
+#set func_lua_name = func_cobj_type + ':' + $reg_name
 int ${signature_name}(lua_State* tolua_S)
 {
+#if len($arguments) > 0
 	bool ok = true;
+#end if
 	constexpr auto LUA_OBJ_TYPE = "${func_cobj_type}";
 #if not $is_constructor
 	constexpr auto LUA_FNAME = "${func_lua_name}";
@@ -44,7 +46,7 @@ int ${signature_name}(lua_State* tolua_S)
 			#set $arg_array += ["arg"+str(count)]
 			#set $count = $count + 1
 		#end while
-		#if $arg_idx >= 0
+		#if $arg_idx > 0
 		LUA_CHECK_PARAMETER(tolua_S, ok, LUA_FNAME);
 		#end if
 		#set $arg_list = ", ".join($arg_array)
@@ -66,12 +68,10 @@ int ${signature_name}(lua_State* tolua_S)
 #end if
 		return 1;
 		#else
+			#set func_invoke = "cobj->%s(%s)" % ($func_name, $arg_list)
 			#if $ret_type.name != "void"
-				#if $ret_type.is_enum
-		auto ret = cobj->${func_name}($arg_list);
-				#else
-		auto ret = cobj->${func_name}($arg_list);
-				#end if
+#if $generator.convert_legacy
+		auto ret = ${func_invoke};
 		${ret_type.from_native({"generator": $generator,
 								"in_value": "ret",
 								"out_value": "ret",
@@ -80,9 +80,12 @@ int ${signature_name}(lua_State* tolua_S)
 								"class_name": $class_name,
 								"level": 2,
 								"scriptname": $generator.scriptname_from_native($ret_type.namespaced_name, $ret_type.namespace_name)})};
+#else
+		native_to_luaval(tolua_S, ${func_invoke});
+#end if
 		return 1;
 			#else
-		cobj->${func_name}($arg_list);
+		${func_invoke};
 		lua_settop(tolua_S, 1);
 		return 1;
 			#end if
