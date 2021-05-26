@@ -38,6 +38,7 @@ conversions:
     "video::": "video."
     "ImGui::": "imgui."
     "implot::": "implot."
+    "fairygui::": "fgui."
     # "cq::": "cq."
     # "cq::message::": "cq."
     # "cq::request::": "cq."
