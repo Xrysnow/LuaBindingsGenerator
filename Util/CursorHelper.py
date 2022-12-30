@@ -41,12 +41,13 @@ class CursorHelper:
             nameSpace = []
         parent = cursor.semantic_parent
         if parent:
-            if parent.kind == cindex.CursorKind.NAMESPACE or\
+            if parent.kind == cindex.CursorKind.NAMESPACE or \
                     (parent.kind == cindex.CursorKind.CLASS_DECL or
                      parent.kind == cindex.CursorKind.STRUCT_DECL or
                      parent.kind == cindex.CursorKind.ENUM_DECL):
                 CursorHelper._BuildNameSpace(parent, includeClassName, nameSpace)
-                if parent.displayname and (parent.kind == cindex.CursorKind.NAMESPACE or includeClassName) and parent.displayname != "__ndk1":
+                if parent.displayname and (
+                        parent.kind == cindex.CursorKind.NAMESPACE or includeClassName) and parent.displayname != "__ndk1":
                     nameSpace.append(parent.displayname)
         return nameSpace
 
@@ -74,7 +75,7 @@ class CursorHelper:
             else:
                 cList = cName.split("::")
                 if cList:
-                    return cList[len(cList)-1]
+                    return cList[len(cList) - 1]
         return cName
 
     @staticmethod
@@ -105,7 +106,7 @@ class CursorHelper:
         if l is None:
             l = []
         parent = cursor.semantic_parent
-        if parent and\
+        if parent and \
                 parent.kind == cindex.CursorKind.CLASS_DECL or parent.kind == cindex.CursorKind.STRUCT_DECL:
             name = parent.displayname
             if name != "__ndk1":
@@ -150,7 +151,8 @@ class CursorHelper:
         """获得参数名，也可用于获得返回值名（获取的是类型名，而不是变量名）。"""
 
         if ntype.kind == cindex.TypeKind.POINTER:
-            return CursorHelper.GetArgName(ntype.get_pointee(), origin) + "*" + (" const" if ntype.is_const_qualified() else "")
+            return CursorHelper.GetArgName(ntype.get_pointee(), origin) + "*" + (
+                " const" if ntype.is_const_qualified() else "")
         elif ntype.kind == cindex.TypeKind.LVALUEREFERENCE:
             return CursorHelper.GetArgName(ntype.get_pointee(), origin) + "&"
         else:
@@ -161,8 +163,8 @@ class CursorHelper:
                 return ntype.spelling.replace("__ndk1::", "")
             elif origin:
                 # 获取原始类型名（即通过typedef和using起的别名的原始名称）。
-                while(decl.kind == cindex.CursorKind.TYPE_ALIAS_DECL or
-                      decl.kind == cindex.CursorKind.TYPEDEF_DECL):
+                while (decl.kind == cindex.CursorKind.TYPE_ALIAS_DECL or
+                       decl.kind == cindex.CursorKind.TYPEDEF_DECL):
                     typedef = decl.underlying_typedef_type
                     declaration = typedef.get_declaration()
                     if declaration.kind != cindex.CursorKind.NO_DECL_FOUND:
@@ -173,7 +175,11 @@ class CursorHelper:
                         break
             if not name:
                 name = CursorHelper.GetWholeName(decl, True)
-            return (("const " if const else "") + name).replace("__ndk1::", "").replace("unsigned long long", "uint64_t").replace("long long", "int64_t")
+            return (("const " if const else "") + name) \
+                .replace("__ndk1::", "") \
+                .replace("unsigned long long", "uint64_t") \
+                .replace("long long", "int64_t")
+
 
     @staticmethod
     def UpperCamelCase(name: str) -> str:
@@ -214,7 +220,7 @@ class CursorHelper:
     def GetFile(cursor, recursive: bool = False) -> str:
         if recursive:
             parent = None
-            while(True):
+            while (True):
                 parent = cursor.semantic_parent
                 if parent:
                     if parent.kind == cindex.CursorKind.TRANSLATION_UNIT:
