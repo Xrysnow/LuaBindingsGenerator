@@ -180,6 +180,16 @@ class CursorHelper:
                 .replace("unsigned long long", "uint64_t") \
                 .replace("long long", "int64_t")
 
+    @staticmethod
+    def GetArgSpellings(cursor) -> list[str]:
+        """获得参数变量名"""
+        spellings = []
+        for arg in cursor.get_arguments():
+            s = arg.spelling
+            if not s:
+                s = 'param{}'.format(len(spellings) + 1)
+            spellings.append(s)
+        return spellings
 
     @staticmethod
     def UpperCamelCase(name: str) -> str:
