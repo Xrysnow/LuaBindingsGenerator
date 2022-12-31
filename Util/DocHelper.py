@@ -312,3 +312,48 @@ def lua_typename_from_natve(script_ns_dict, namespace_class_name: str, is_ret=Fa
             else:
                 return ncn.replace(k, v)
     return ncn
+
+
+def parse_function_comment(s) -> tuple[str, dict[str, str]]:
+    if not s:
+        return '', {}
+    regular_replace_list = [
+        ("\r\n", "\n"),
+        (r"[ \t\f]*//!", ""),
+        (r"[ \t\f]*//", ""),
+        (r"[ \t\f]*/\*\*", ""),
+        (r"[ \t\f]*/\*", ""),
+        (r"[ \t\f]*/", ""),
+        (r"\n[ \t\f]*\*[ \t\f]", "\n"),
+        (r"\n[ \t\f]*\*\n", "\n\n"),
+        (r"\n[ \t\f]*\*$", ""),
+        (r"[ \t\f]*[\*]*$", ""),
+        (r"^[ \t\f]*", ""),
+    ]
+    for item in regular_replace_list:
+        s = re.sub(item[0], item[1], s)
+
+    paramComments = {}
+    lines = []
+    # print(s)
+    for line in s.split('\n'):
+        if line.startswith('\\param ') or line.startswith('@param '):
+            words = line.split(' ')
+            name = words[1]
+            if name in LUA_KEYWORDS:
+                name += '_'
+            paramComments[name] = ' '.join(words[2:])
+        elif line.startswith('\\return ') or line.startswith('@return '):
+            paramComments['return'] = line[len('@return '):]
+        else:
+            lines.append(line.strip())
+            # print(line)
+    s = '\n'.join(lines)
+
+    regular_replace_list = [
+        ("\n", "\n--- ")
+    ]
+    for item in regular_replace_list:
+        s = re.sub(item[0], item[1], s)
+    s = '--- ' + s
+    return s, paramComments
