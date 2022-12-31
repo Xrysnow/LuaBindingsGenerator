@@ -304,10 +304,11 @@ def lua_typename_from_natve(script_ns_dict, namespace_class_name: str, is_ret=Fa
         return "function"
     if ncn in LUA_TYPE_MAP:
         return LUA_TYPE_MAP[ncn]
+    ncn = ncn.replace("*", "").replace("const ", "").replace("::", ".")
     for (k, v) in script_ns_dict.items():
         if k in ncn:
             if is_ret:
-                return ncn.replace("*", "").replace("const ", "").replace(k, v)
+                return ncn.replace(k, v)
             else:
-                return ncn.replace("*", "").replace("const ", "").replace(k, v)
-    return ncn.replace("*", "").replace("const ", "")
+                return ncn.replace(k, v)
+    return ncn
