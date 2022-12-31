@@ -21,6 +21,17 @@ LUA_TYPE_MAP = {
     "unsigned char": "number",
     "float": "number",
     "double": "number",
+    "int8_t": "number",
+    "uint8_t": "number",
+    "int16_t": "number",
+    "uint16_t": "number",
+    "int32_t": "number",
+    "uint32_t": "number",
+    "int64_t": "number",
+    "uint64_t": "number",
+    "size_t": "number",
+    "ssize_t": "number",
+    "uintptr_t": "number",
     "bool": "boolean",
     "const char*": "string",
     "const char *": "string",
@@ -223,6 +234,10 @@ def normalize_type_str(s, depth=1):
     else:
         normalized_name = normalize_type_name_by_sections(sections)
     return normalized_name
+
+
+def add_lua_type(key, valule):
+    LUA_TYPE_MAP[key] = valule
 
 
 def lua_typename_from_natve(script_ns_dict, namespace_class_name: str, is_ret=False, nt=None):
