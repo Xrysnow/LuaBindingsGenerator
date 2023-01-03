@@ -21,19 +21,16 @@
 
 import os
 import sys
+import time
 from typing import Dict
-
 from clang import cindex
-
 from Native.Base import Exposure
 from Native.Variable import Variable
 from Native.Function import Function
 from Native.Enum import AnonymousEnum, NamedEnum
 from Native.Object import Class, Struct
-
 from Util.Functions import FindAllFilesMatch
 from Util.CursorHelper import CursorHelper
-
 from Config.BaseConfig import BaseConfig
 
 
@@ -95,7 +92,7 @@ class BaseGenerator(BaseConfig):
             headerStr = [
                 '#pragma once\n',
                 '#include "base/ccConfig.h"\n',
-                '#include "lua_conversion/lua_conversion.h"\n'
+                '#include "lua_conversion/lua_conversion.hpp"\n'
             ]
             if self.ToNameSpace:
                 headerStr.append("namespace " + self.ToNameSpace + " {\n")
@@ -112,7 +109,7 @@ class BaseGenerator(BaseConfig):
             strList = [
                 '#pragma once\n',
                 '#include "base/ccConfig.h"\n',
-                '#include "lua_conversion/lua_conversion.h"\n'
+                '#include "lua_conversion/lua_conversion.hpp"\n'
             ]
             '''
             strList.append('#include "{}.hpp"\n'.format(self._outputFile))
@@ -153,12 +150,11 @@ class BaseGenerator(BaseConfig):
     def _GenerateObjectCode(self):
         """为避免产生编译器C1060错误，将每10个类/枚举/结构体放置于一个实现文件。
         """
-
         groupIndex = self.GroupCount
         idx = 0
         strList = []
         exposures = list(self._exposures.values())
-        print('total exposures: {}'.format(len(exposures)))
+        print('Top exposures: {}'.format(len(exposures)))
 
         def DoEnd(self: BaseGenerator):
             if not strList:
@@ -213,11 +209,11 @@ class BaseGenerator(BaseConfig):
     def Generate(self):
         self.__LazyInit()
         self._exposures.clear()
-        print("\n生成 {} 代码……".format(self._outputFile))
+        print("\n生成 {} 代码...".format(self._outputFile))
         self._ParseHeaders()
         self._CheckOldFile()
         self._GenerateCode()
-        print("\n完成 {} 生成。".format(self._outputFile))
+        print("完成 {} 生成。".format(self._outputFile))
 
     def _CheckDiagnostics(self, diagnostics):
         """检查并打印诊断信息。"""
