@@ -19,10 +19,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import re
+from copy import deepcopy
 from typing import List
 from clang import cindex
 from Config.BaseConfig import BaseConfig
 from Util.CursorHelper import CursorHelper
+from Util.DocHelper import lua_typename_from_natve, parse_function_comment, add_lua_type, LUA_KEYWORDS
 
 
 class Type(object):
@@ -35,6 +38,7 @@ class Type(object):
         # 生成的c++实现部分字符串。
         self._impl = ""
         self._decl = ""
+        self._doc = ""
         # 原始名。
         self._name = CursorHelper.GetName(cursor)
         # 原始全名。
@@ -73,6 +77,8 @@ class Type(object):
                 # 有时在内部生成缓存对象时，可能绕过命名空间的判断，在此再次限定一次，但不判断没有命名空间的类型。
                 self._generatable = nameSpace in generator.NameSpace
 
+        self._comment: str = self.ParseComment(cursor.raw_comment)
+
     def UsingFor(self, *args):
         """
         为某个类/结构体复制一份使用using语句定义的成员。
@@ -86,6 +92,10 @@ class Type(object):
     def _Declaration(self):
         # 使用空实现。
         return self._decl
+
+    def _Documentation(self):
+        # 使用空实现。
+        return self._doc
 
     @property
     def WholeName(self):
@@ -116,6 +126,14 @@ class Type(object):
         return self._newName
 
     @property
+    def Comment(self):
+        return self._comment
+
+    @Comment.setter
+    def Comment(self, value):
+        self._comment = value
+
+    @property
     def Implement(self):
         if not self._impl:
             self._impl = self._Implement()
@@ -126,6 +144,43 @@ class Type(object):
         if not self._decl:
             self._decl = self._Declaration()
         return self._decl
+
+    @property
+    def Documentation(self):
+        if not self._doc:
+            self._doc = self._Documentation()
+        return self._doc
+
+    def ParseComment(self, comment):
+        replaceStr = comment
+        if comment is None:
+            return ""
+        regular_replace_list = [
+            ("\r\n", "\n"),
+            (r"[ \t\f]*//!", ""),
+            (r"[ \t\f]*//", ""),
+            (r"[ \t\f]*/\*\*", ""),
+            (r"[ \t\f]*/\*", ""),
+            (r"[ \t\f]*/", ""),
+            (r"\n[ \t\f]*\*[ \t\f]", "\n"),
+            (r"\n[ \t\f]*\*\n", "\n\n"),
+            (r"\n[ \t\f]*\*$", ""),
+            (r"[ \t\f]*[\*]*$", ""),
+            (r"^[ \t\f]*", ""),
+            ("\n", "\n--- "),
+        ]
+        for item in regular_replace_list:
+            replaceStr = re.sub(item[0], item[1], replaceStr)
+        return '--- ' + replaceStr
+
+    def ParseDocType(self, type_name, is_ret=False):
+        ns_map = {}
+        for k, v in self.Generator.NameSpace.items():
+            ns_map[k + '::'] = v + '.'
+        t = lua_typename_from_natve(ns_map, type_name, is_ret)
+        if t == 'void':
+            t = 'any'
+        return t
 
 
 class Exposure(Type):
@@ -234,6 +289,7 @@ class Wrapper(Exposure):
         else:
             super().__init__(cursor, OG._generator, using)
             self._parent = OG
+        add_lua_type(self.WholeName, '.'.join(self.NameList))
 
 
 class Callable(Type):
