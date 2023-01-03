@@ -215,7 +215,7 @@ class BaseGenerator(BaseConfig):
         self._GenerateCode()
         print("完成 {} 生成。".format(self._outputFile))
 
-    def _CheckDiagnostics(self, diagnostics):
+    def _CheckDiagnostics(self, diagnostics: list[cindex.Diagnostic]):
         """检查并打印诊断信息。"""
         errors = []
         for idx, d in enumerate(diagnostics):
@@ -228,6 +228,12 @@ class BaseGenerator(BaseConfig):
         for idx, d in enumerate(errors):
             print("{}.  严重性 = {},\n    位于 ： [{}] {!r},\n    详细 ： {!r}".format(
                 idx + 1, severities[d.severity], self.Tag, d.location, d.spelling))
+            for f in d.fixits:
+                print('-- fix:')
+                print(f)
+            for c in d.children:
+                print('--')
+                print(c)
         print("====\n")
         print("*** 发现错误，无法继续。")
         raise Exception("Fatal error in parsing headers")
