@@ -111,24 +111,8 @@ class AnonymousEnum(Enum):
 
         kvMap = self._GetKeyValue(rename=False)
         strList = []
-        # strList.append('\tLUA_ENUM_DEF("{}");'.format(self._newName))
         for key, value in kvMap.items():
             strList.append('\tLUA_CONSTANT("{}", {});'.format(key, str(value)))
-        # strList.append('\tLUA_ENUM_END();')
-
-        '''
-        if self._parent:
-            static = self._generator.CxxConfig.static
-            const = self._generator.CxxConfig.const
-            for key, value in kvMap.items():
-                # strList.append('pTable["{}"]["{}"]["{}"] = {};'.format(static, const, key, value))
-                strList.append('\t\tLUA_CONST("{}", {});'.format(key, value))
-        else:
-            for key, value in kvMap.items():
-                # strList.append('pTable["{}"] = {};'.format(key, value))
-                strList.append('\t\tLUA_CONST("{}", {});'.format(key, value))
-        '''
-
         if self._parent:
             s = [
                 '{}\n{{'.format(self._def),

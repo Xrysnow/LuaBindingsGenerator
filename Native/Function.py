@@ -40,24 +40,6 @@ class Function(Exposure, Callable):
         """
         implStr = Exposure._Implement(self)
         strList = []
-        '''
-        strList = ['pTable["{}"] = '.format(self._newName)]
-        if self.Overload:
-            strList.append("sol::overload(")
-        implList = []
-        for idx, impl in enumerate(self._implementations):
-            ii = impl.Implement(idx == 0 or not impl.Default)
-            if ii:
-                implList.append(ii)
-        strList.append(",\n\t\t".join(implList))
-        if self.Overload:
-            strList.append(")")
-        strList.append(";")
-        return implStr.format(
-            "",
-            "".join(strList).format()  # 这个空的format为了去掉双大括号{{...}}
-        )
-        '''
         luaTName = self._prefixName.replace('::', '.')
         luaFName = '{}.{}'.format(luaTName, self._newName)
         s = [

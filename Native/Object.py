@@ -87,23 +87,6 @@ class Object(Wrapper):
                 mt["set"]["self._newName"] = &Class::member;
             """
             cxxConfig = self._generator.CxxConfig
-            '''
-            strList = []
-            if not self._readonly:
-                implStr = "&{}".format(self._wholeName)
-                strList.append('mt["{}"]["{}"]={};'.format(cxxConfig.set, self._newName, implStr))
-
-            implStr = "static_cast<{}{} {}::*>(&{})".format(
-                self._type if self._pointer else ("" if self._const else "const "),
-                ("" if self._const else " const") if self._pointer else self._type,
-                self._prefixName,
-                self._wholeName
-            )
-
-            strList.append('mt["{}"]["{}"]={};'.format(cxxConfig.get, self._newName, implStr))
-            # return '\n\t'.join(strList)
-            '''
-
             hintName = '.'.join(self._obj.NameList) + '.' + self.Name
             s = [
                 'int {}({} lua_S)'.format(self._getterName, cxxConfig.LuaType),
@@ -142,18 +125,6 @@ class Object(Wrapper):
             依照 mt["get"|"set"]["self._newName"] = [](...){...};的方式生成。
             """
             cxxConfig = self._generator.CxxConfig
-            '''
-            static = cxxConfig.static
-            strList = []
-            if not self._readonly:
-                implStr = "[](const {}& value){{{} = value;}}".format(self._type, self._wholeName)
-                strList.append('mt["{}"]["{}"]["{}"]={};'.format(static, cxxConfig.set, self._newName, implStr))
-
-            implStr = "[]()->{}&{{return {};}}".format(self._type, self._wholeName)
-            strList.append('mt["{}"]["{}"]["{}"]={};'.format(static, cxxConfig.get, self._newName, implStr))
-            # return "\n\t".join(strList)
-            '''
-
             hintName = '.'.join(self._obj.NameList) + '.' + self.Name
             s = [
                 'int {}({} lua_S)'.format(self._getterName, cxxConfig.LuaType),
@@ -353,17 +324,8 @@ class Object(Wrapper):
         def _Implement(self):
             implStr = super()._Implement()
             return implStr
-            # return "// Method Impl {}, {}".format(self._newName, self._fname)
 
         def _Declaration(self):
-            # implStr = super()._Declaration()
-            # pType, pName, _ = self._Property()
-            # strList = []
-            # if pType:
-            #     newName = self._newName
-            #     strList.append('\nsolTempObj=mt["{}"];'.format(newName))
-            #     strList.append('mt["{}"]["{}"]=solTempObj;'.format(pType, pName))
-            # return implStr.format("", "\n".join(strList))
             return 'LUA_METHOD("{}", {});'.format(self._newName, self._fname)
 
         def UsingFor(self, *args):
@@ -508,13 +470,6 @@ class Object(Wrapper):
                 # 有纯虚函数未实现时不支持构造函数。
                 implStr = super()._Declaration()
                 return implStr
-                # if not self._obj._dtor:
-                #     if not self.RequiresDtor():
-                #         return "// Decl No Dtor\n\t{}".format(implStr)
-                #     else:
-                #         return "// Decl Has Dtor\n\t{}".format(implStr)
-            # 不支持的实现使用特殊的生成方式。
-            # return 'mt["{}"]=[](){{return nullptr;}};\n'.format(newName)
             return "// Decl No Ctor Dtor"
 
         @property
@@ -799,16 +754,6 @@ class Object(Wrapper):
                 ctorName, dtorName
             ))
 
-        # allDirectlyBases = [
-        #     ",sol::usertype_traits<{}*>::metatable()".format(b._wholeName) for b in self._directlyBases]
-        # allDecl.append(
-        #     'sol::table mt=lua.Class(sol::usertype_traits<{}*>::metatable(){});'.format(
-        #         self._wholeName, ''.join(allDirectlyBases)))
-
-        # if self._methods or self._staticMethods:
-        #     allDecl.append("sol::object solTempObj=sol::lua_nil;")
-        #     allDecl.append("LUA_METHOD_BEGIN();")
-
         # 构造函数或__new仿元方法。
         if not self._new:
             allow = False
@@ -823,7 +768,8 @@ class Object(Wrapper):
                     break
             if not self._ctor or not allow or self._pvMethods:
                 # allDecl.append('mt["{}"]=[](){{return nullptr;}};'.format(self._generator.CxxConfig.new))
-                allDecl.append('LUA_CTOR_NULL();')
+                # allDecl.append('LUA_CTOR_NULL();')
+                pass
             else:
                 if type(self._ctor) is str:
                     allDecl.append(self._ctor)
