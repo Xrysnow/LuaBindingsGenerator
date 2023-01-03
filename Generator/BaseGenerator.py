@@ -144,6 +144,7 @@ class BaseGenerator(BaseConfig):
                 strList.append('\t{}\n'.format(c.Called))
             if self.MacroJudgement:
                 strList.append("#endif\n")
+            strList.append("\treturn 0;\n")
             strList.append("}\n")
             if self.ToNameSpace:
                 strList.append("}")

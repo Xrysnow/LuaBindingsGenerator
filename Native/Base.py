@@ -214,6 +214,7 @@ class Exposure(Type):
             progressive,
             "\n{}",
             "\n\tLUA_ENTRY_END({});".format(len(self._nameList) - 1),
+            "\n\treturn 0;"
             "\n}}"
         ])
 

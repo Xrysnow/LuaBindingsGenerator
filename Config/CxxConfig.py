@@ -48,6 +48,6 @@ class CxxConfig(object):
         self.Extern = "extern "
         # self.Define = "void RegisterLua{}Auto(" + self.LuaType + " lua)"
         # self.Called = "RegisterLua{}Auto(lua);"
-        self.Define = "void luaReg_{}(" + self.LuaType + " lua_S)"
+        self.Define = "int luaReg_{}(" + self.LuaType + " lua_S)"
         self.Called = "luaReg_{}(lua_S);"
         self.Func = "luaReg_{}"
