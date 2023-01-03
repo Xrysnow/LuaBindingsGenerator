@@ -313,16 +313,31 @@ class Callable(Type):
             # varible, or enumerator.
             cindex.CursorKind.DECL_REF_EXPR]
 
-        def __init__(self, callable: "Callable", args: List[str], originArgs: List[str], res: str, default: bool,
+        def __init__(self, callable: "Callable",
+                     args: List[str], originArgs: List[str], argNames: List[str],
+                     res: str,
+                     default: bool,
                      supported: bool) -> None:
             super().__init__()
             self._callable = callable
             self._args = args
             self._originArgs = originArgs
+            self._argNames = argNames
             self._result = res
+            self._cursor = self._callable.Cursor
             # 该实现是否基于默认参数。
             self._default: bool = default
             self._supported: bool = supported
+            self._comment: str = ''
+            self._pcomment: dict[str, str] = {}
+            #
+            docArgNames = []
+            for a in argNames:
+                if a in LUA_KEYWORDS:
+                    docArgNames.append(a + '_')
+                else:
+                    docArgNames.append(a)
+            self._docArgNames = docArgNames
 
         @classmethod
         def _CheckDefaultArg(cls, paramNode) -> bool:
@@ -371,9 +386,45 @@ class Callable(Type):
                 implList.append(");}}")
             return "".join(implList)
 
+        def GetArgumentDocs(self):
+            doc = []
+            pcomment = self.ParamComments
+            for t, ori, name in zip(self.Args, self.OriginArgs, self._docArgNames):
+                docType = self._callable.ParseDocType(ori)
+                if t.startswith('const ') and t.endswith('&'):
+                    t = t[6:-1]
+                if name in pcomment:
+                    doc.append('---@param {} {} @({}) {}'.format(name, docType, t, pcomment[name]))
+                else:
+                    doc.append('---@param {} {} @({})'.format(name, docType, t))
+            return doc
+
+        def GetResultDoc(self):
+            retType = 'nil'
+            retTypeDirect = CursorHelper.GetArgName(self.Cursor.result_type)
+            pcomment = self.ParamComments
+            if self.Result != 'void':
+                retType = self._callable.ParseDocType(self.Result, True)
+            if 'return' in pcomment:
+                return '---@return {} @({}) {}'.format(retType, retTypeDirect, pcomment['return'])
+            else:
+                return '---@return {} @({})'.format(retType, retTypeDirect)
+
         @property
         def Args(self):
             return self._args
+
+        @property
+        def OriginArgs(self):
+            return self._originArgs
+
+        @property
+        def ArgNames(self):
+            return self._argNames
+
+        @property
+        def ArgNamesDoc(self):
+            return self._docArgNames
 
         @property
         def Result(self):
@@ -386,6 +437,25 @@ class Callable(Type):
         @property
         def Default(self):
             return self._default
+
+        @property
+        def Comment(self):
+            return self._comment
+
+        @Comment.setter
+        def Comment(self, value):
+            self._comment = value
+
+        def AddParamComment(self, key: str, value: str):
+            self._pcomment[key] = value
+
+        @property
+        def ParamComments(self):
+            return self._pcomment
+
+        @property
+        def Cursor(self):
+            return self._cursor
 
     _ImplType = Implementation
 
@@ -403,8 +473,11 @@ class Callable(Type):
         supported = True
         args: List[str] = []
         originArgs: List[str] = []
+        argNames: List[str] = []
         result = "void"
         minArgs = 0
+        comment = ''
+        pcomment = {}
         clz = self.__class__
         try:
             if cursor.type.is_function_variadic():
@@ -417,7 +490,10 @@ class Callable(Type):
                     supported = False
                 args.append(CursorHelper.GetArgName(arg))
                 originArgs.append(CursorHelper.GetArgName(arg, True))
-            result = CursorHelper.GetArgName(cursor.result_type)
+            argNames = CursorHelper.GetArgSpellings(cursor)
+            result = CursorHelper.GetArgName(cursor.result_type, True)
+            # comment = self.ParseComment(cursor.raw_comment)
+            comment, pcomment = parse_function_comment(cursor.raw_comment)
 
             # 最小参数数量。
             minArgs = len(args)
@@ -438,11 +514,18 @@ class Callable(Type):
         # 具有（最大参数数量-最小参数数量+1）种实现。
         # 且参数数量越长的实现在越靠前（sol重载以先查找先匹配的原则决定重载）。
         for index in range(len(args) - minArgs + 1):
-            retImpl.append(clz._ImplType(
+            impl = clz._ImplType(
                 self,
-                args[:len(args) - index], originArgs[:len(originArgs) - index], result,
+                args[:len(args) - index],
+                originArgs[:len(originArgs) - index],
+                argNames[:len(argNames) - index],
+                result,
                 minArgs < len(args), supported
-            ))
+            )
+            impl.Comment = comment
+            for k, v in pcomment.items():
+                impl.AddParamComment(k, v)
+            retImpl.append(impl)
 
         return retImpl
 
