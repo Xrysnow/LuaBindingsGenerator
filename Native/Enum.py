@@ -23,6 +23,7 @@ from clang import cindex
 from Util.CursorHelper import CursorHelper
 from Config.BaseConfig import BaseConfig
 from Native.Base import Wrapper
+from Util.DocHelper import LUA_KEYWORDS
 
 
 class Enum(Wrapper):
@@ -34,19 +35,15 @@ class Enum(Wrapper):
             useValue        是否直接使用字面值。
         """
         kv = {}
-        upper = self._generator.UpperField
-        lower = self._generator.LowerField
         for node in self._cursor.get_children():
             name = node.displayname
-
             name = name if not rename else self._generator.RenameMember(self._directName, name)
             name = self._generator.RenameEnumEntry(self._directName, name)
-            # name = name if not upper else CursorHelper.UpperCamelCase(name)
-            # name = name if not lower else CursorHelper.LowerCamelCase(name)
+            comment = self.ParseComment(node.raw_comment)
             if not useValue:
-                kv[name] = CursorHelper.GetWholeName(node)
+                kv[name] = [CursorHelper.GetWholeName(node), comment]
             else:
-                kv[name] = node.enum_value
+                kv[name] = [node.enum_value, comment]
         return kv
 
 
@@ -63,13 +60,14 @@ class NamedEnum(Enum):
         strList = []
         strList.append('\tLUA_ENUM_DEF("{}");'.format(self._newName))
         for key, value in kvMap.items():
-            strList.append('\tLUA_ENUM_ENTRY("{}", {});'.format(key, str(value)))
+            strList.append('\tLUA_ENUM_ENTRY("{}", {});'.format(key, str(value[0])))
         strList.append('\tLUA_ENUM_END();')
 
         if self._parent:
             s = [
                 '{}\n{{'.format(self._def),
                 '\n'.join(strList),
+                '\treturn 0;',
                 '}'
             ]
             return '\n'.join(s)
@@ -77,6 +75,29 @@ class NamedEnum(Enum):
 
     def _Declaration(self):
         return "// NamedEnum Decl {}".format(self._newName)
+
+    def _Documentation(self):
+        kvMap = self._GetKeyValue(True)
+        docs = []
+        docs.append('local {} = {{'.format(self._newName))
+        for key, value in kvMap.items():
+            key: str
+            is_idt = key.isascii() and (key[0].isalpha() or key[0] == '_')
+            is_idt = is_idt and (key not in LUA_KEYWORDS)
+            if value[1]:
+                docs.append('\t{}'.format(value[1]))
+            if is_idt:
+                docs.append('\t{} = {},'.format(key, str(value[0])))
+            else:
+                docs.append('\t["{}"] = {},'.format(key, str(value[0])))
+        docs.append('}')
+        docs.append(self.Comment if self.Comment else '---')
+        docs.append('---@class {}'.format('.'.join(self._nameList)))
+        if self._parent:
+            docs.append('{}.{} = {}'.format(self._parent.NewName, self._newName, self._newName))
+        else:
+            docs.append('{} = {}'.format('.'.join(self._nameList), self._newName))
+        return '\n'.join(docs)
 
 
 class AnonymousEnum(Enum):
@@ -112,11 +133,12 @@ class AnonymousEnum(Enum):
         kvMap = self._GetKeyValue(rename=False)
         strList = []
         for key, value in kvMap.items():
-            strList.append('\tLUA_CONSTANT("{}", {});'.format(key, str(value)))
+            strList.append('\tLUA_CONSTANT("{}", {});'.format(key, str(value[0])))
         if self._parent:
             s = [
                 '{}\n{{'.format(self._def),
                 '\n'.join(strList),
+                '\treturn 0;',
                 '}'
             ]
             return '\n'.join(s)
@@ -124,3 +146,22 @@ class AnonymousEnum(Enum):
 
     def _Declaration(self):
         return "// AnonymousEnum Decl {}".format(self._newName)
+
+    def _Documentation(self):
+        kvMap = self._GetKeyValue(True)
+        docs = []
+        if self._parent:
+            pname = self._parent.NewName
+        else:
+            pname = '.'.join(self._nameList[:-1])
+        for key, value in kvMap.items():
+            key: str
+            is_idt = key.isascii() and (key[0].isalpha() or key[0] == '_')
+            is_idt = is_idt and (key not in LUA_KEYWORDS)
+            if value[1]:
+                docs.append('{}'.format(value[1]))
+            if is_idt:
+                docs.append('{}.{} = {}'.format(pname, key, str(value[0])))
+            else:
+                docs.append('{}["{}"] = {}'.format(pname, key, str(value[0])))
+        return '\n'.join(docs)
