@@ -251,6 +251,9 @@ class BaseConfig(object):
         for k, v in self.StripEnumEntries.items():
             if entryName.startswith(v) and len(entryName) > len(v):
                 return entryName[len(v):]
+        # 避免数字开头
+        if entryName[0].isdigit():
+            entryName = '_' + entryName
         return entryName
 
     def Generatable(self, className: str, memberName: str = None) -> bool:
