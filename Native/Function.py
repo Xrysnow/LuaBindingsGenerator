@@ -45,7 +45,7 @@ class Function(Exposure, Callable):
         s = [
             'int {}(lua_State* lua_S)'.format(self._fname),
             '{',
-            '\tLUA_INVOKE_HEADER("{}", "{}");'.format(luaTName, luaFName),
+            '\tLUA_GINVOKE_HEADER("{}", "{}");'.format(luaTName, luaFName),
             '\t'
         ]
         strList.append('\n'.join(s))
@@ -63,7 +63,7 @@ class Function(Exposure, Callable):
         strList.append("\n\t".join(implList))
         expected = list(argc.keys())
         expected.sort()
-        strList.append('\n\tLUA_INVOKE_FOOTER("{}");'.format(','.join(expected)))
+        strList.append('\n\tLUA_GINVOKE_FOOTER("{}");'.format(','.join(expected)))
         strList.append("\n}")
         strList.append("\n")
 
