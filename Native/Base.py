@@ -176,7 +176,7 @@ class Type(object):
     def ParseDocType(self, type_name, is_ret=False):
         ns_map = {}
         for k, v in self.Generator.NameSpace.items():
-            ns_map[k + '::'] = v + '.'
+            ns_map[k + '.'] = v + '.'
         t = lua_typename_from_natve(ns_map, type_name, is_ret)
         if t == 'void':
             t = 'any'
