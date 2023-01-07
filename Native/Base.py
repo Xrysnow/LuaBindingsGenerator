@@ -345,6 +345,9 @@ class Callable(Type):
             for node in paramNode.get_children():
                 if node.kind in cls.__LiteralList:
                     return True
+                if node.kind == cindex.CursorKind.TEMPLATE_REF:
+                    # 跳过模板内的字面值
+                    return False
                 if cls._CheckDefaultArg(node):
                     return True
             return False
