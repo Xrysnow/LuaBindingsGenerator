@@ -494,6 +494,8 @@ class Object(Wrapper):
                                 self._generatable = False
                                 break
                         break
+            if self._generatable:
+                print('Ctor     {}'.format(cursor.displayname))
 
         def RequiresDtor(self):
             if not self.Supported or self._obj.PureVirtualMethods:
@@ -704,11 +706,14 @@ class Object(Wrapper):
             if kind == CursorKind.ENUM_DECL:
                 # 匿名判断不使用cursor.is_anonymous()获取，此处直接简单判断名字作为匿名标准。
                 member = NamedEnum(cursor, self) if CursorHelper.GetName(cursor) else AnonymousEnum(cursor, self)
+                print('Enum     {}'.format(member.WholeName))
             elif kind == CursorKind.CLASS_DECL:
                 member = Class(cursor, self)
+                print('Class    {}'.format(member.WholeName))
             elif kind == CursorKind.STRUCT_DECL:
                 if generator.AllowStruct:
                     member = Struct(cursor, self)
+                    print('Struct   {}'.format(member.WholeName))
             elif kind == CursorKind.FIELD_DECL:
                 member = Object.Field(cursor, self)
             elif kind == CursorKind.VAR_DECL:
