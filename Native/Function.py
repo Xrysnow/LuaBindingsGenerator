@@ -57,8 +57,9 @@ class Function(Exposure, Callable):
         strList.append('\n'.join(s))
         implList = []
         argc = {}
+        noCast = len(self._implementations) == 1
         for idx, impl in enumerate(self._implementations):
-            ii = impl.Implement(idx == 0 or not impl.Default)
+            ii = impl.Implement(idx == 0 or not impl.Default, noCast)
             if ii:
                 narg = len(impl.Args)
                 argc[str(narg)] = True

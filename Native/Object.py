@@ -233,8 +233,9 @@ class Object(Wrapper):
 
             implList = []
             argc = {}
+            noCast = len(self._implementations) == 1
             for idx, impl in enumerate(self._implementations):
-                ii = impl.Implement(idx == 0 or not impl.Default)
+                ii = impl.Implement(idx == 0 or not impl.Default, noCast)
                 if ii:
                     narg = len(impl.Args)
                     argc[str(narg)] = True
@@ -339,10 +340,12 @@ class Object(Wrapper):
             def PureVirtual(self):
                 return self._pureVirtual
 
-            def Implement(self, simple=False) -> str:
+            def Implement(self, simple=False, noCast=False) -> str:
                 implList = []
                 objName = self._callable._obj._wholeName
-                if simple or not self._default:
+                if noCast:
+                    implList.append("&" + self._callable._wholeName)
+                elif simple or not self._default:
                     implList.append("static_cast<{}({}*)({}){}>(".format(
                         self._result,
                         objName + "::",
@@ -447,7 +450,7 @@ class Object(Wrapper):
         class Implementation(Callable.Implementation):
             """构造函数的实现类。"""
 
-            def Implement(self, simple=False) -> str:
+            def Implement(self, simple=False, noCast=False) -> str:
                 implList = ["[]("]
                 argList = []
                 for idx, arg in enumerate(self._args):

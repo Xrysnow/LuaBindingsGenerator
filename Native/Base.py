@@ -355,7 +355,7 @@ class Callable(Type):
         def __eq__(self, o: "Callable.Implementation") -> bool:
             return self._originArgs == o._originArgs
 
-        def Implement(self, simple=False) -> str:
+        def Implement(self, simple=False, noCast=False) -> str:
             """
             参数：
                     simple      是否使用简便生成（直接使用函数指针）。
@@ -363,7 +363,9 @@ class Callable(Type):
             if not self._supported:
                 return ""
             implList = []
-            if simple:
+            if noCast:
+                implList.append("&" + self._callable._wholeName)
+            elif simple:
                 implList.append("static_cast<{}(*)({})>(".format(self._result, ", ".join(self._args)))
                 implList.append("&" + self._callable._wholeName)
                 implList.append(")")
