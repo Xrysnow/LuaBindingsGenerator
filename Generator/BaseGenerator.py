@@ -26,7 +26,7 @@ from typing import Dict
 from clang import cindex
 from Native.Base import Exposure
 from Native.Variable import Variable
-from Native.Function import Function
+from Native.Function import Function, FunctionCollection
 from Native.Enum import AnonymousEnum, NamedEnum
 from Native.Object import Class, Struct
 from Util.Functions import FindAllFilesMatch
@@ -129,7 +129,8 @@ class BaseGenerator(BaseConfig):
             if self.ToNameSpace:
                 strList.append("namespace " + self.ToNameSpace + " {\n")
             for c in self._exposures.values():
-                strList.append(c.Define + "\n")
+                if c.Define:
+                    strList.append(c.Define + "\n")
 
             strList.append('\n')
             strList.append('inline ' + (self.CxxConfig.Define + "\n{{\n").format(self.Tag))
@@ -138,7 +139,8 @@ class BaseGenerator(BaseConfig):
             # for ns in self.NameSpace.values():
             #     strList.append('lua["{0}"]=lua.get_or("{0}",lua.create_table());\n'.format(ns))
             for c in self._exposures.values():
-                strList.append('\t{}\n'.format(c.Called))
+                if c.Called:
+                    strList.append('\t{}\n'.format(c.Called))
             if self.MacroJudgement:
                 strList.append("#endif\n")
             strList.append("\treturn 0;\n")
@@ -191,6 +193,9 @@ class BaseGenerator(BaseConfig):
                 if self.ToNameSpace:
                     # strList.append("namespace " + self.ToNameSpace + " {\n")
                     strList.append("using namespace " + self.ToNameSpace + ";\n\n")
+                if self.ExtraImpl:
+                    strList.append(self.ExtraImpl)
+                    strList.append('\n\n')
             strList.append(obj.Implement)
             strList.append("\n")
 
@@ -201,10 +206,75 @@ class BaseGenerator(BaseConfig):
         else:
             DoEnd(self)
 
+    def _GenerateObjectDoc(self):
+        groupIndex = 0
+        idx = 0
+        strList = []
+        exposures = list(self._exposures.values())
+
+        def DoEnd(self: BaseGenerator):
+            if not strList:
+                return
+            # if self.ToNameSpace:
+            #     strList.append("}\n")
+
+            num = 0 if groupIndex == 0 else (idx // groupIndex)
+            postfix = "%02d.lua" % num
+            if num == 0:
+                postfix = ".lua"
+            with open(self._filePrefix + postfix, "w", encoding='utf-8') as implFile:
+                content = ''.join(strList)
+                content = self.DocPostprocess(content)
+                implFile.write(content)
+                strList.clear()
+
+        allNames = []
+        for obj in exposures:
+            allNames.append(obj.NewName)
+        for obj in exposures:
+            if groupIndex == 0 and idx == 0:
+                strList.append('------------------------------\n')
+                strList.append('--- Tag: {}\n'.format(self.Tag))
+                # strList.append('--- Exposures: {}\n'.format(', '.join(allNames)))
+                strList.append('--- Date: {}\n'.format(time.strftime("%Y-%m-%d", time.localtime())))
+                strList.append('------------------------------\n')
+                strList.append("\n")
+                if self.ExtraDoc:
+                    strList.append(self.ExtraDoc)
+                    strList.append('\n\n')
+            # strList.append("\n")
+            strList.append(obj.Documentation)
+            strList.append("\n\n")
+            # if groupIndex != 0 and (idx % groupIndex == groupIndex - 1):
+            #     DoEnd(self)
+            idx += 1
+        else:
+            DoEnd(self)
+
+    def DocPostprocess(self, content: str):
+        return content
+
+    def _ProcessGlobalExposure(self):
+        # 合并全局函数的注册
+        global_functions = {}
+        for key, obj in self._exposures.copy().items():
+            if isinstance(obj, Function):
+                ns = obj.NameList[0]
+                if ns in global_functions:
+                    global_functions[ns].append(obj)
+                else:
+                    global_functions[ns] = [obj]
+                del self._exposures[key]
+        for k, v in global_functions.items():
+            c = FunctionCollection(v)
+            self._exposures['{}/functions'.format(c.NameList[0])] = c
+
     def _GenerateCode(self):
+        self._ProcessGlobalExposure()
         self._GenerateHeadCode()
         self._GenerateImplCode()
         self._GenerateObjectCode()
+        self._GenerateObjectDoc()
 
     def Generate(self):
         self.__LazyInit()
