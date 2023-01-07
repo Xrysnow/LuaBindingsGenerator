@@ -35,6 +35,10 @@ class Function(Exposure, Callable):
         Exposure.__init__(self, cursor, generator, using)
         self._fname = 'lua_' + self._prefixName.replace('::', '_') + '_' + self._newName
 
+    @property
+    def FName(self):
+        return self._fname
+
     def _Implement(self):
         """
         全局变量生成。
@@ -101,3 +105,34 @@ class Function(Exposure, Callable):
     def Called(self):
         return ''
 
+
+class FunctionCollection(Exposure):
+
+    def __init__(self, functions: list[Function], using: Wrapper = None) -> None:
+        Exposure.__init__(self, functions[0].Cursor, functions[0].Generator, using)
+        self._functions = functions.copy()
+        self._functions.sort(key=lambda x: x.NewName)
+        cxxConfig = self._generator.CxxConfig
+        tag = self._generator.Tag
+        name = self.NameList[0] + '_global_functions'
+        self.UpdateDefine([name])
+        self._fname = cxxConfig.Func.format(tag + '_' + name)
+
+    def _Implement(self):
+        """
+        全局变量生成。
+        按照 命名空间.名字=全局变量 的方式生成。
+        """
+        implStr = Exposure._Implement(self)
+        impl = []
+        reg = []
+        for f in self._functions:
+            impl.append(f.Implement)
+            reg.append('\tLUA_METHOD("{}", {});'.format(f.NewName, f.FName))
+        return '\n'.join(impl) + '\n' + implStr.format("", '\n'.join(reg))
+
+    def _Documentation(self):
+        docs = []
+        for f in self._functions:
+            docs.append(f.Documentation)
+        return '\n\n'.join(docs)
