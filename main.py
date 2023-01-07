@@ -26,10 +26,10 @@ import importlib
 import os
 from Generator.BaseGenerator import BaseGenerator
 
-from LstgGenerator import LstgGenerator
+from LstgGenerator import ALL_GENERATORS
 
 # 是否使用多进程。
-_UseMultiProcessing = False
+_UseMultiProcessing = True
 
 
 def _ProcessWork(ele):
@@ -51,9 +51,8 @@ if __name__ == "__main__":
 
     genList = []
     if not E:
-        genList += [
-            [LstgGenerator, ""],
-        ]
+        for g in ALL_GENERATORS:
+            genList.append([g, ""])
     else:
         try:
             path = os.path.dirname(E)
@@ -62,7 +61,7 @@ if __name__ == "__main__":
             name = os.path.basename(E)
             module = importlib.import_module(name)
             genList.append([module.__dict__[name], ""])
-        except:
+        except _:
             print(f"无法生成 {E} 文件指定的lua绑定。")
 
     if _UseMultiProcessing and len(genList) > 1:
