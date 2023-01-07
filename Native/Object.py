@@ -20,13 +20,14 @@
 # THE SOFTWARE.
 
 import re
-from typing import Dict, List, Set
-from Native.Enum import AnonymousEnum, NamedEnum
 from clang import cindex
 from clang.cindex import AccessSpecifier, Cursor, CursorKind
+from typing import Dict, List, Set
 from Config.BaseConfig import BaseConfig
-from Util.CursorHelper import CursorHelper
 from Native.Base import Type, Wrapper, Callable
+from Native.Enum import AnonymousEnum, NamedEnum
+from Util.CursorHelper import CursorHelper
+from Util.DocHelper import LUA_KEYWORDS, add_lua_type
 
 
 class Object(Wrapper):
@@ -116,6 +117,18 @@ class Object(Wrapper):
                 return 'LUA_FIELD("{}", {}, nullptr);'.format(self._newName, self._getterName)
             return 'LUA_FIELD("{}", {}, {});'.format(self._newName, self._getterName, self._setterName)
 
+        def _Documentation(self):
+            docs = []
+            luaName = self._obj.NewName + '.' + self.NewName
+            luaType = self.ParseDocType(self._type)
+            if self.Comment:
+                docs.append(self.Comment)
+            if self._readonly:
+                docs.append('---@type {} ({}, readonly)'.format(luaType, self._type))
+            else:
+                docs.append('---@type {} ({})'.format(luaType, self._type))
+            return '\n'.join(docs) + '\n{} = nil'.format(luaName)
+
     class StaticField(Variable):
         """静态成员变量。"""
 
@@ -151,6 +164,18 @@ class Object(Wrapper):
             if self._readonly:
                 return 'LUA_SFIELD("{}", {}, nullptr);'.format(self._newName, self._getterName)
             return 'LUA_SFIELD("{}", {}, {});'.format(self._newName, self._getterName, self._setterName)
+
+        def _Documentation(self):
+            docs = []
+            luaName = self._obj.NewName + '.' + self.NewName
+            luaType = self.ParseDocType(self._type)
+            if self.Comment:
+                docs.append(self.Comment)
+            if self._readonly:
+                docs.append('---@type {} ({}, static, readonly)'.format(luaType, self._type))
+            else:
+                docs.append('---@type {} ({}, static)'.format(luaType, self._type))
+            return '\n'.join(docs) + '\n{} = nil'.format(luaName)
 
     class Function(Member, Callable):
         def __init__(self, cursor, obj: "Object", using: "Object" = None) -> None:
@@ -224,10 +249,42 @@ class Object(Wrapper):
             strList.append('\n\tLUA_INVOKE_FOOTER("{}");'.format(','.join(expected)))
             strList.append("\n}")
             return implStr + "".join(strList)
-            # return "// Function Impl {}, {}".format(self._newName, self._fname)
 
         def _Declaration(self):
             return 'LUA_METHOD("{}", {});'.format(self._newName, self._fname)
+
+        def _Doc(self, isStatic, isCtor):
+            docs = []
+            luaTName = self._obj.NewName
+            luaFName = '{}:{}'.format(luaTName, self._newName)
+            for idx, impl in enumerate(self._implementations):
+                ii = impl.Implement(idx == 0 or not impl.Default)
+                if not ii:
+                    continue
+                comment = impl.Comment
+                #
+                doc = []
+                if comment:
+                    doc.append(comment)
+                if isStatic:
+                    doc.append('--- (static)')
+                if isCtor:
+                    ctorDesc = 'constructor'
+                    if self._cursor.is_default_constructor():
+                        ctorDesc += ', default'
+                    if self._cursor.is_copy_constructor():
+                        ctorDesc += ', copy'
+                    if self._cursor.is_move_constructor():
+                        ctorDesc += ', move'
+                    if self._cursor.is_converting_constructor():
+                        ctorDesc += ', convert'
+                    doc.append('--- ({})'.format(ctorDesc))
+                doc += impl.GetArgumentDocs()
+                doc.append(impl.GetResultDoc())
+                args = ', '.join(impl.ArgNamesDoc)
+                doc.append('function {}({})\nend'.format(luaFName, args))
+                docs.append('\n'.join(doc))
+            return '\n\n'.join(docs)
 
         def UsingFor(self, *args):
             f = super().UsingFor(*args)
@@ -250,9 +307,10 @@ class Object(Wrapper):
         class Implementation(Callable.Implementation):
             """成员函数的实现类。"""
 
-            def __init__(self, callable: "Callable", args: List[str], originArgs: List[str], res: str, default: bool,
+            def __init__(self, callable: "Callable", args: List[str], originArgs: List[str], argNames: List[str],
+                         res: str, default: bool,
                          supported: bool) -> None:
-                super().__init__(callable, args, originArgs, res, default, supported)
+                super().__init__(callable, args, originArgs, argNames, res, default, supported)
                 cursor = callable.Cursor
                 self._virtual: bool = cursor.is_virtual_method()
                 self._pureVirtual: bool = cursor.is_pure_virtual_method()
@@ -328,6 +386,9 @@ class Object(Wrapper):
         def _Declaration(self):
             return 'LUA_METHOD("{}", {});'.format(self._newName, self._fname)
 
+        def _Documentation(self):
+            return self._Doc(False, False)
+
         def UsingFor(self, *args):
             f = super().UsingFor(*args)
             for idx, impl in enumerate(f._implementations):
@@ -371,6 +432,9 @@ class Object(Wrapper):
 
         def _Declaration(self):
             return 'LUA_METHOD("{}", {});'.format(self._newName, self._fname)
+
+        def _Documentation(self):
+            return self._Doc(True, False)
 
     class Constructor(Function):
         """
@@ -471,6 +535,9 @@ class Object(Wrapper):
                 implStr = super()._Declaration()
                 return implStr
             return "// Decl No Ctor Dtor"
+
+        def _Documentation(self):
+            return self._Doc(False, True)
 
         @property
         def Generatable(self) -> bool:
@@ -845,6 +912,70 @@ class Object(Wrapper):
             "\n\t".join(allDecl)
         )
         return ret
+
+    def _Documentation(self):
+        docs = []
+        docs.append(self.Comment)
+        ns = '.'.join(self._nameList[:-1])
+        name = ns + '.' + self._newName
+        if self._bases:
+            base = self._bases[0]
+            bname = '.'.join(base.NameList)
+            docs.append('---@class {}:{}'.format(name, bname))
+        else:
+            docs.append('---@class {}'.format(name))
+        docs.append('local {} = '.format(self._newName) + '{}')
+        docs.append('{} = {}'.format(name, self._newName))
+        clsDoc = '\n'.join(docs)
+        #
+        allDoc = []
+        # 构造函数或__new仿元方法。
+        if not self._new:
+            allow = False
+            for c in self._generator.AllowConstructor:
+                if re.match("^" + c + "$", self._directName):
+                    # 验证是否允许构造函数。
+                    allow = True
+                    for ban in self._generator.BanConstructor:
+                        if re.match("^" + ban + "$", self._directName):
+                            allow = False
+                            break
+                    break
+            if not self._ctor or not allow or self._pvMethods:
+                # allDoc.append('-- LUA_CTOR_NULL();')
+                pass
+            else:
+                if type(self._ctor) is str:
+                    pass
+                else:
+                    allDoc.append(self._ctor.Documentation)
+
+        # 内部类/结构体或内部枚举等。
+        wrapperDocs = [wrapper.Documentation for wrapper in self._wrappers]
+
+        # 成员变量和方法
+
+        self._variables.sort(key=lambda x: x.NewName)
+        methods = list(self._methods.values())
+        methods.sort(key=lambda x: x.NewName)
+        staticMethods = list(self._staticMethods.values())
+        staticMethods.sort(key=lambda x: x.NewName)
+        self._wrappers.sort(key=lambda x: x.NewName)
+
+        varDocs = [var.Documentation for var in self._variables]
+        methodDocs = [method.Documentation for method in methods]
+        staticMethodDocs = [method.Documentation for method in staticMethods]
+
+        if varDocs:
+            allDoc += varDocs
+        if methodDocs:
+            allDoc += methodDocs
+        if staticMethodDocs:
+            allDoc += staticMethodDocs
+        if wrapperDocs:
+            allDoc += wrapperDocs
+
+        return clsDoc + '\n\n' + '\n\n'.join(allDoc)
 
 
 class Class(Object):

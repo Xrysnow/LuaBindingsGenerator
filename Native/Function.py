@@ -21,6 +21,8 @@
 
 from Config.BaseConfig import BaseConfig
 from Native.Base import Callable, Exposure, Wrapper
+from Util.CursorHelper import CursorHelper
+from Util.DocHelper import LUA_KEYWORDS
 
 
 class Function(Exposure, Callable):
@@ -65,10 +67,37 @@ class Function(Exposure, Callable):
         expected.sort()
         strList.append('\n\tLUA_GINVOKE_FOOTER("{}");'.format(','.join(expected)))
         strList.append("\n}")
-        strList.append("\n")
-
-        reg = '\tLUA_METHOD("{}", {});'.format(self._newName, self._fname)
-        return "".join(strList) + implStr.format("", reg)
+        return "".join(strList)  # + implStr.format("", reg)
 
     def _Declaration(self):
         return ''
+
+    def _Documentation(self):
+        docs = []
+        # luaTName = self._prefixName.replace('::', '.')
+        luaTName = self.NameList[0]
+        luaFName = '{}.{}'.format(luaTName, self._newName)
+        for idx, impl in enumerate(self._implementations):
+            ii = impl.Implement(idx == 0 or not impl.Default)
+            if not ii:
+                continue
+            comment = impl.Comment
+            #
+            doc = []
+            if comment:
+                doc.append(comment)
+            doc += impl.GetArgumentDocs()
+            doc.append(impl.GetResultDoc())
+            args = ', '.join(impl.ArgNamesDoc)
+            doc.append('function {}({})\nend'.format(luaFName, args))
+            docs.append('\n'.join(doc))
+        return '\n\n'.join(docs)
+
+    @property
+    def Define(self):
+        return ''
+
+    @property
+    def Called(self):
+        return ''
+

@@ -20,10 +20,11 @@
 # THE SOFTWARE.
 
 
-from Native.Base import Exposure
 import re
-from Util.CursorHelper import CursorHelper
 from clang import cindex
+from Native.Base import Exposure
+from Util.CursorHelper import CursorHelper
+from Util.DocHelper import lua_typename_from_natve
 
 
 class Variable(Exposure):
@@ -93,13 +94,21 @@ class Variable(Exposure):
         return getterImpl + setterImpl + implStr
 
     def _Declaration(self):
-        """
-        全局变量生成。
-        按照 命名空间.名字=全局变量 的方式生成。
-        """
         called = self.Generator.CxxConfig.Called
         getter = called.format(self._getterName)
         setter = "nullptr"
         if not self._readonly:
             setter = called.format(self._setterName)
         return '// LUA_VARIABLE("{}", {}, {});'.format(self._newName, getter, setter)
+
+    def _Documentation(self):
+        docs = []
+        luaName = ".".join(self._nameList)
+        luaType = self.ParseDocType(self._type)
+        if self.Comment:
+            docs.append(self.Comment)
+        if self._readonly:
+            docs.append('---@type {} ({}, readonly)'.format(luaType, self._type))
+        else:
+            docs.append('---@type {} ({})'.format(luaType, self._type))
+        return '\n'.join(docs) + '\n{} = nil'.format(luaName)

@@ -1,5 +1,4 @@
 import re
-from clang import cindex
 
 LUA_KEYWORDS = [
     'and', 'break', 'do', 'else', 'elseif', 'end',
