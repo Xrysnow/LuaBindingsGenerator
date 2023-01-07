@@ -70,9 +70,11 @@ class BaseConfig(object):
         self.UpperMethod = False
         # 使用大驼峰命名法（在最后阶段生效，不会影响命名空间，只对成员变量/枚举值生效）。
         self.UpperField = False
+        self.UpperFunction = False
         #
         self.LowerMethod = False
         self.LowerField = False
+        self.LowerFunction = False
         # 是否自动生成属性。
         # 当一个方法能够接受一个参数，且前缀符合SetPrefix时，生成set属性；
         # 当一个方法能够返回一个非void值，且接受0个参数，前缀也还符合GetPrefix时，生成get属性。
@@ -208,6 +210,9 @@ class BaseConfig(object):
 
         # 多少个为一组？
         self.GroupCount = 10
+
+        self.ExtraImpl: str = ''
+        self.ExtraDoc: str = ''
 
     def RenameMember(self, className: str, funcName: str) -> str:
         """重命名给定的函数。

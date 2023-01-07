@@ -33,6 +33,10 @@ class Function(Exposure, Callable):
     def __init__(self, cursor, generator: BaseConfig, using: Wrapper = None) -> None:
         Callable.__init__(self, cursor, generator, using)
         Exposure.__init__(self, cursor, generator, using)
+        if self._generator.UpperFunction:
+            self._newName = CursorHelper.UpperCamelCase(self._newName)
+        elif self._generator.LowerFunction:
+            self._newName = CursorHelper.LowerCamelCase(self._newName)
         self._fname = 'lua_' + self._prefixName.replace('::', '_') + '_' + self._newName
 
     @property
