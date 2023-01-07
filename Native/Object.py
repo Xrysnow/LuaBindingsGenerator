@@ -88,7 +88,7 @@ class Object(Wrapper):
                 mt["set"]["self._newName"] = &Class::member;
             """
             cxxConfig = self._generator.CxxConfig
-            hintName = '.'.join(self._obj.NameList) + '.' + self.Name
+            hintName = '.'.join(self._obj.NameList) + '.' + self.NewName
             s = [
                 'int {}({} lua_S)'.format(self._getterName, cxxConfig.LuaType),
                 '{',
@@ -138,7 +138,7 @@ class Object(Wrapper):
             依照 mt["get"|"set"]["self._newName"] = [](...){...};的方式生成。
             """
             cxxConfig = self._generator.CxxConfig
-            hintName = '.'.join(self._obj.NameList) + '.' + self.Name
+            hintName = '.'.join(self._obj.NameList) + '.' + self.NewName
             s = [
                 'int {}({} lua_S)'.format(self._getterName, cxxConfig.LuaType),
                 '{',
@@ -185,7 +185,7 @@ class Object(Wrapper):
             if self._generator.UpperMethod:
                 # 尝试获取大驼峰名字。
                 self._newName = CursorHelper.UpperCamelCase(self._newName)
-            elif self._generator.LowerField:
+            elif self._generator.LowerMethod:
                 self._newName = CursorHelper.LowerCamelCase(self._newName)
             self._fname = 'lua_' + self._prefixName.replace('::', '_') + '_' + self._newName
 
@@ -478,6 +478,8 @@ class Object(Wrapper):
             self.fname = 'lua_' + self._prefixName.replace('::', '_') + '_' + self._newName
             self._fname = self.fname
             self.dname = 'lua_' + self._prefixName.replace('::', '_') + '_delete'
+            if cursor.availability == cindex.AvailabilityKind.NOT_AVAILABLE:
+                self._generatable = False
             if self._generatable:
                 # 构造函数默认不生成，除非位于AllowConstructor中且不在BanConstructor中。
                 self._generatable = False
@@ -516,7 +518,7 @@ class Object(Wrapper):
                     return "{}\n// Impl No Dtor".format(implStr)
                 else:
                     dtor = [
-                        'int {}(lua_State* tolua_S)'.format(self.dname),
+                        'int {}(lua_State* lua_S)'.format(self.dname),
                         '{',
                         '\tauto cobj = LUA_TO_COBJ({}*, 1);'.format(self._obj.WholeName),
                         '\tdelete cobj;',

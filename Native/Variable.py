@@ -35,7 +35,7 @@ class Variable(Exposure):
     def __init__(self, cursor, generator):
         super().__init__(cursor, generator)
         self._const = cursor.type.is_const_qualified()
-        self._type = CursorHelper.GetArgName(self._cursor.type)
+        self._type = CursorHelper.GetArgName(self._cursor.type, True)
         self._pointer = cursor.type.kind == cindex.TypeKind.POINTER
         # const即是readonly
         self._readonly = self._const
