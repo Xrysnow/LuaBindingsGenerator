@@ -291,7 +291,7 @@ class Object(Wrapper):
             f = super().UsingFor(*args)
             f._implementations = []
             for impl in self._implementations:
-                f._implementations.append(self._ImplType(f, impl._args, impl._originArgs,
+                f._implementations.append(self._ImplType(f, impl._args, impl._originArgs, impl._argNames,
                                                          impl._result, impl._default, impl._supported))
             return f
 
