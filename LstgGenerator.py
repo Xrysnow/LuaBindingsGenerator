@@ -241,9 +241,6 @@ class WindowHelper(LstgGenerator):
         self.SkipMembers |= {
             'WindowHelperDesktop': ['setVideoMode', 'getVideoMode'],
         }
-        # self.ExtraArgs += [
-        #     '-DCC_PLATFORM_PC'
-        # ]
 
 
 class ZipArchive(LstgGenerator):
@@ -258,24 +255,47 @@ class ZipArchive(LstgGenerator):
         }
 
 
+class Audio(LstgGenerator):
+    def __init__(self):
+        super().__init__('audio')
+        self.NameSpace |= {
+            'audio': 'audio'
+        }
+        self.Headers += [
+            f'{self.EngineRoot}/Audio/AudioEngine.h',
+        ]
+        self.Classes += ['Decoder', 'Engine', 'RecordingDevice', 'SoundData', 'Source', 'Stream']
+        self.SkipMembers |= {
+            'Source': ['queueData', '.*Atomic', 'copyBuffer', 'getBufferOffset', 'update'],
+            'Decoder': ['^getBuffer$', 'getBufferOffset', 'decode', 'setLoopingPoint'],
+            'SoundData': ['^getData$'],
+            'Stream': ['read'],
+            'Engine': ['^init$', '^end$']
+        }
+        self.AllowConstructor = []
+        self.BanConstructor = ['.*']
+
+
 class FairyGui(LstgGenerator):
     def __init__(self):
-        super().__init__('FGui')
-        self.NameSpace |= {
-            'fgui': 'fgui'
+        outputPath = os.path.join(os.path.abspath(os.curdir), "out", "fairygui")
+        super().__init__('fgui', outputPath)
+        self.NameSpace = {
+            'fairygui': 'fgui'
         }
+        self.Root = f"{self.CocosRoot}/extensions/fairygui"
         self.ExtraArgs += [
-            f"-I{self.CocosRoot}/extensions/fairygui",
+            f"-I{self.Root}",
         ]
         self.Headers += [
-            f'{self.CocosRoot}/extensions/fairygui/FairyGUI.h',
-            f'{self.CocosRoot}/extensions/fairygui/GLoader3D.h',
-            f'{self.CocosRoot}/extensions/fairygui/tween/EaseManager.h'
-            f'{self.CocosRoot}/extensions/fairygui/tween/GPath.h'
-            f'{self.CocosRoot}/extensions/fairygui/display/FUISprite.h'
-            f'{self.CocosRoot}/extensions/fairygui/utils/html/HtmlElement.h'
-            f'{self.CocosRoot}/extensions/fairygui/utils/html/HtmlObject.h'
-            f'{self.CocosRoot}/extensions/fairygui/utils/html/HtmlParser.h'
+            f'{self.Root}/FairyGUI.h',
+            f'{self.Root}/GLoader3D.h',
+            f'{self.Root}/tween/EaseManager.h',
+            f'{self.Root}/tween/GPath.h',
+            f'{self.Root}/display/FUISprite.h',
+            f'{self.Root}/utils/html/HtmlElement.h',
+            f'{self.Root}/utils/html/HtmlObject.h',
+            f'{self.Root}/utils/html/HtmlParser.h',
         ]
         self.Classes += [
             'EventTag', 'UIEventType', 'EventCallback', 'UIEventDispatcher', 'EventContext', 'IHitTest', 'PixelHitTest',
@@ -304,33 +324,13 @@ class FairyGui(LstgGenerator):
             'PackageItem': ['^rawData$', 'branches', 'highResolution', '^pixelHitTestData$', '^extensionCreator$',
                             '^bitmapFont$', '^scale9Grid$', 'skeletonAnchor'],
             'UIEventDispatcher': ['dispatchEvent', 'bubbleEvent'],
-            'GObject': ['^as$', 'getData', 'setData', 'getDragBounds'],
+            'GObject': ['^as$', 'getData', 'setData', 'getDragBounds', '_.*'],
             'GComponent': ['getChildByPath$'],
             'GearBase': ['getController$', 'setController$', 'getTweenConfig$', 'updateFromRelations$', '^apply$',
                          'updateState$', '^setup$']
         }
-        self.BanConstructor += ['EventTag', 'GTextField']
-
-
-class Audio(LstgGenerator):
-    def __init__(self):
-        super().__init__('audio')
-        self.NameSpace |= {
-            'audio': 'audio'
-        }
-        self.Headers += [
-            f'{self.EngineRoot}/Audio/AudioEngine.h',
-        ]
-        self.Classes += ['Decoder', 'Engine', 'RecordingDevice', 'SoundData', 'Source', 'Stream']
-        self.SkipMembers |= {
-            'Source': ['queueData', '.*Atomic', 'copyBuffer', 'getBufferOffset', 'update'],
-            'Decoder': ['^getBuffer$', 'getBufferOffset', 'decode', 'setLoopingPoint'],
-            'SoundData': ['^getData$'],
-            'Stream': ['read'],
-            'Engine': ['^init$', '^end$']
-        }
+        # self.BanConstructor += ['EventTag', 'GTextField']
         self.AllowConstructor = []
-        self.BanConstructor = ['.*']
 
 
 ALL_GENERATORS = [
@@ -351,4 +351,5 @@ ALL_GENERATORS = [
     # WindowHelper,
     # ZipArchive,
     # Audio,
+    # FairyGui,
 ]
