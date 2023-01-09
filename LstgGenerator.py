@@ -45,7 +45,7 @@ class LstgGenerator(BaseGenerator):
             f"-I{self.EngineRoot}/external",
             f"-I{self.EngineRoot}/external/libzippp/src/src",
             f"-I{self.EngineRoot}/external/libzippp/libzip/include",
-            "-DANDROID"
+            "-DANDROID",
             "-DCC_USE_GFX=1"
         ]
         self.Classes += []
