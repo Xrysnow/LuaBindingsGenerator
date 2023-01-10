@@ -293,6 +293,7 @@ class FairyGui(LstgGenerator):
             f'{self.Root}/tween/EaseManager.h',
             f'{self.Root}/tween/GPath.h',
             f'{self.Root}/display/FUISprite.h',
+            f'{self.Root}/utils/ByteBuffer.h',
             f'{self.Root}/utils/html/HtmlElement.h',
             f'{self.Root}/utils/html/HtmlObject.h',
             f'{self.Root}/utils/html/HtmlParser.h',
@@ -326,11 +327,14 @@ class FairyGui(LstgGenerator):
             'UIEventDispatcher': ['dispatchEvent', 'bubbleEvent'],
             'GObject': ['^as$', 'getData', 'setData', 'getDragBounds', '_.*'],
             'GComponent': ['getChildByPath$'],
+            'HtmlObject': ['objectPool$'],
+            'RelationItem': ['copyFrom$'],
+            'Relations': ['copyFrom$'],
             'GearBase': ['getController$', 'setController$', 'getTweenConfig$', 'updateFromRelations$', '^apply$',
                          'updateState$', '^setup$']
         }
         # self.BanConstructor += ['EventTag', 'GTextField']
-        self.AllowConstructor = []
+        self.AllowConstructor = ['EventTag', 'TextFormat']
 
 
 ALL_GENERATORS = [
