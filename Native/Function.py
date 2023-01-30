@@ -22,7 +22,6 @@
 from Config.BaseConfig import BaseConfig
 from Native.Base import Callable, Exposure, Wrapper
 from Util.CursorHelper import CursorHelper
-from Util.DocHelper import LUA_KEYWORDS
 
 
 class Function(Exposure, Callable):
@@ -48,7 +47,8 @@ class Function(Exposure, Callable):
         全局变量生成。
         按照 命名空间.名字=全局变量 的方式生成。
         """
-        implStr = Exposure._Implement(self)
+        if not self.Supported:
+            return ''
         strList = []
         luaTName = self._prefixName.replace('::', '.')
         luaFName = '{}.{}'.format(luaTName, self._newName)
@@ -63,6 +63,8 @@ class Function(Exposure, Callable):
         argc = {}
         noCast = len(self._implementations) == 1
         for idx, impl in enumerate(self._implementations):
+            if not impl.Supported:
+                continue
             ii = impl.Implement(idx == 0 or not impl.Default, noCast)
             if ii:
                 narg = len(impl.Args)
@@ -82,11 +84,15 @@ class Function(Exposure, Callable):
         return ''
 
     def _Documentation(self):
+        if not self.Supported:
+            return ''
         docs = []
         # luaTName = self._prefixName.replace('::', '.')
         luaTName = self.NameList[0]
         luaFName = '{}.{}'.format(luaTName, self._newName)
         for idx, impl in enumerate(self._implementations):
+            if not impl.Supported:
+                continue
             ii = impl.Implement(idx == 0 or not impl.Default)
             if not ii:
                 continue
@@ -132,6 +138,8 @@ class FunctionCollection(Exposure):
         impl = []
         reg = []
         for f in self._functions:
+            if not f.Supported:
+                continue
             impl.append(f.Implement)
             reg.append('\tLUA_METHOD("{}", {});'.format(f.NewName, f.FName))
         return '\n'.join(impl) + '\n' + implStr.format("", '\n'.join(reg))
@@ -139,5 +147,7 @@ class FunctionCollection(Exposure):
     def _Documentation(self):
         docs = []
         for f in self._functions:
+            if not f.Supported:
+                continue
             docs.append(f.Documentation)
         return '\n\n'.join(docs)

@@ -291,8 +291,9 @@ class Object(Wrapper):
             f = super().UsingFor(*args)
             f._implementations = []
             for impl in self._implementations:
-                f._implementations.append(self._ImplType(f, impl._args, impl._originArgs, impl._argNames,
-                                                         impl._result, impl._default, impl._supported))
+                f._implementations.append(self._ImplType(
+                    f, impl._args, impl._originArgs, impl._argNames,
+                    impl._result, impl._default, impl._supported))
             return f
 
         def Clone(self):
@@ -342,7 +343,10 @@ class Object(Wrapper):
 
             def Implement(self, simple=False, noCast=False) -> str:
                 implList = []
-                objName = self._callable._obj._wholeName
+                obj: Object = self._callable._obj
+                objName = obj._wholeName
+                if self._callable.Name in obj._allProtected:
+                    noCast = False
                 if noCast:
                     implList.append("&" + self._callable._wholeName)
                 elif simple or not self._default:
@@ -402,6 +406,20 @@ class Object(Wrapper):
     class StaticMethod(Function):
         """静态成员函数。"""
 
+        class Implementation(Callable.Implementation):
+            def __init__(self, callable: "Callable", args: List[str], originArgs: List[str], argNames: List[str],
+                         res: str, default: bool,
+                         supported: bool) -> None:
+                super().__init__(callable, args, originArgs, argNames, res, default, supported)
+
+            def Implement(self, simple=False, noCast=False) -> str:
+                obj: Object = self._callable._obj
+                if self._callable.Name in obj._allProtected:
+                    noCast = False
+                return super().Implement(simple, noCast)
+
+        _ImplType = Implementation
+
         def _Instance(self):
             """
             由自己的名字决定是否可以转化为单例获取和销毁的静态属性。
@@ -409,22 +427,6 @@ class Object(Wrapper):
                     str     "get"或"set"或None；
                     str     单例实现。
             """
-            if not self._implementations:
-                return None, None
-            lastImpl = self._implementations[-1]
-            if len(lastImpl.Args) > 0:
-                # 最后的实现参数个数必须为0。
-                return None, None
-            name = self._name
-            for className, instTuple in self._generator.InstanceMethods.items():
-                if not re.match("^" + className + "$", self._classesName):
-                    continue
-                if instTuple[0] and re.match("^" + instTuple[0] + "$", name):
-                    retStr = "[](){{return {}();}}".format(self._wholeName)
-                    return self._generator.CxxConfig.get, retStr
-                elif instTuple[1] and re.match("^" + instTuple[1] + "$", name):
-                    retStr = "[](sol::object,std::nullptr_t){{{}();}}".format(self._wholeName)
-                    return self._generator.CxxConfig.set, retStr
             return None, None
 
         def _Implement(self):
@@ -687,6 +689,7 @@ class Object(Wrapper):
         kind = cursor.kind
         public = cursor.access_specifier == AccessSpecifier.PUBLIC
         protected = cursor.access_specifier == AccessSpecifier.PROTECTED
+        private = cursor.access_specifier == AccessSpecifier.PRIVATE
         member = None
         if kind == CursorKind.CXX_BASE_SPECIFIER:
             if public or protected:
@@ -719,6 +722,8 @@ class Object(Wrapper):
             elif kind == CursorKind.VAR_DECL:
                 member = Object.StaticField(cursor, self)
             elif kind == CursorKind.CXX_METHOD:
+                # private中可能出现重载
+                protected = protected or private
                 if cursor.is_static_method():
                     if public or protected:
                         member = Object.StaticMethod(cursor, self)

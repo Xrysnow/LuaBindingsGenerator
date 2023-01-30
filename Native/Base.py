@@ -510,6 +510,9 @@ class Callable(Type):
                         minArgs = idx
                         break
                     idx = idx + 1
+
+            if cursor.access_specifier == cindex.AccessSpecifier.PRIVATE:
+                supported = False
         except:
             supported = False
             args = []
