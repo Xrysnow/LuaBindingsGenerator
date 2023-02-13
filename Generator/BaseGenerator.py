@@ -92,8 +92,9 @@ class BaseGenerator(BaseConfig):
             headerStr = [
                 '#pragma once\n',
                 '#include "base/ccConfig.h"\n',
-                '#include "lua_conversion/lua_conversion.hpp"\n'
             ]
+            for s in self.HeadCodeHeaders:
+                headerStr.append('#include "{}"\n'.format(s))
             if self.ToNameSpace:
                 headerStr.append("namespace " + self.ToNameSpace + " {\n")
             headerStr.append((self.CxxConfig.Define + ";\n").format(self.Tag))
@@ -109,22 +110,9 @@ class BaseGenerator(BaseConfig):
             strList = [
                 '#pragma once\n',
                 '#include "base/ccConfig.h"\n',
-                '#include "lua_conversion/lua_conversion.hpp"\n'
             ]
-            '''
-            strList.append('#include "{}.hpp"\n'.format(self._outputFile))
-            for header in self.Headers:
-                relative = ".."
-                for searchPath in self.SearchPaths:
-                    relative = os.path.relpath(header, searchPath)
-                    if ".." not in relative:
-                        break
-                if ".." not in relative:
-                    strList.append('#include "{}"\n'.format(relative.replace(os.path.sep, '/')))
-                else:
-                    strList.append('#include "{}"\n'.format(os.path.basename(header)))
-            '''
-
+            for s in self.HeadCodeHeaders:
+                strList.append('#include "{}"\n'.format(s))
             strList.append('\n')
             if self.ToNameSpace:
                 strList.append("namespace " + self.ToNameSpace + " {\n")
@@ -179,16 +167,22 @@ class BaseGenerator(BaseConfig):
                 strList.append('#include "{}.hpp"\n'.format(self._outputFile))
                 if self.MacroJudgement:
                     strList.append(self.MacroJudgement + "\n")
-                for header in self.Headers:
-                    relative = ".."
-                    for searchPath in self.SearchPaths:
-                        relative = os.path.relpath(header, searchPath)
+                if self.ImplCodeHeaders is not None:
+                    # 直接使用self.ImplCodeHeaders
+                    for s in self.ImplCodeHeaders:
+                        strList.append('#include "{}"\n'.format(s))
+                else:
+                    # 从self.Headers生成
+                    for header in self.Headers:
+                        relative = ".."
+                        for searchPath in self.SearchPaths:
+                            relative = os.path.relpath(header, searchPath)
+                            if ".." not in relative:
+                                break
                         if ".." not in relative:
-                            break
-                    if ".." not in relative:
-                        strList.append('#include "{}"\n'.format(relative.replace(os.path.sep, '/')))
-                    else:
-                        strList.append('#include "{}"\n'.format(os.path.basename(header)))
+                            strList.append('#include "{}"\n'.format(relative.replace(os.path.sep, '/')))
+                        else:
+                            strList.append('#include "{}"\n'.format(os.path.basename(header)))
                 strList.append("\n")
                 if self.ToNameSpace:
                     # strList.append("namespace " + self.ToNameSpace + " {\n")

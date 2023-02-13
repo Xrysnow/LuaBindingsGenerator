@@ -214,6 +214,17 @@ class BaseConfig(object):
         self.ExtraImpl: str = ''
         self.ExtraDoc: str = ''
 
+        # 目标头文件中的头文件包含
+        self.HeadCodeHeaders = [
+            'lua_conversion/lua_conversion.hpp'
+        ]
+        # 替换目标实现文件中的头文件包含
+        self.ImplCodeHeaders = None
+        # {类: { 方法: ['参数']}}
+        self.SkipOverloads: Dict[str, Dict[str, List[str]]] = {}
+        # 函数参数中出现所给类型时跳过
+        self.InvalidArgTypes: List[str] = []
+
     def RenameMember(self, className: str, funcName: str) -> str:
         """重命名给定的函数。
 
