@@ -886,9 +886,6 @@ class Object(Wrapper):
 
         # 内部类/结构体或内部枚举等。
         wrapperImpls = [wrapper.Implement for wrapper in self._wrappers]
-        # if wrapperImpls:
-        #     # 新增一个换行以间隔。
-        #     wrapperImpls.append("")
 
         # 成员变量和方法
 
@@ -907,10 +904,14 @@ class Object(Wrapper):
         methodDecls = [method.Declaration for method in methods]
         staticMethodDecls = [method.Declaration for method in staticMethods]
 
-        # 调用内部类/结构体/枚举生成。
-        # called = self._generator.CxxConfig.Called
-        # wrapperCalleds = [called.format(self._generator.Tag + "".join(wrapper._nameList)) for wrapper in self._wrappers]
-        wrapperCalleds = [wrapper.Called for wrapper in self._wrappers]
+        # 内部类/结构体/枚举
+        wrapperObjCalleds = []
+        wrapperEnumCalleds = []
+        for wrapper in self._wrappers:
+            if isinstance(wrapper, Object):
+                wrapperObjCalleds.append(wrapper.Called)
+            else:
+                wrapperEnumCalleds.append(wrapper.Called)
 
         if varDecls:
             allDecl += varDecls
@@ -918,8 +919,8 @@ class Object(Wrapper):
             allDecl += methodDecls
         if staticMethodDecls:
             allDecl += staticMethodDecls
-        if wrapperCalleds:
-            allDecl += wrapperCalleds
+        if wrapperEnumCalleds:
+            allDecl += wrapperEnumCalleds
 
         allDecl.append("LUA_CLS_END();")
 
@@ -935,10 +936,19 @@ class Object(Wrapper):
         s1 = "\n".join(wrapperImpls)
         if wrapperImpls:
             s1 += "\n"
-        ret = sImpl.format(
-            s1 + "\n".join(allImpl) + "\n",
-            "\n\t".join(allDecl)
-        )
+
+        if wrapperObjCalleds:
+            sImpl = sImpl.replace('return 0;', '{}\n\treturn 0;')
+            ret = sImpl.format(
+                s1 + "\n".join(allImpl) + "\n",
+                "\n\t".join(allDecl),
+                "\n\t".join(wrapperObjCalleds)
+            )
+        else:
+            ret = sImpl.format(
+                s1 + "\n".join(allImpl) + "\n",
+                "\n\t".join(allDecl)
+            )
         return ret
 
     def _Documentation(self):
