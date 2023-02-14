@@ -22,12 +22,21 @@
 from Config.BaseConfig import BaseConfig
 from Native.Base import Callable, Exposure, Wrapper
 from Util.CursorHelper import CursorHelper
+from typing import List
 
 
 class Function(Exposure, Callable):
     """
     全局函数类型。
     """
+
+    class Implementation(Callable.Implementation):
+        def IsGeneratable(self):
+            # 跳过不需要的情况
+            parent: Function = self._callable
+            return parent.Generator.FunctionGeneratable(parent.NameList[0], parent.Name, self.Args)
+
+    _ImplType = Implementation
 
     def __init__(self, cursor, generator: BaseConfig, using: Wrapper = None) -> None:
         Callable.__init__(self, cursor, generator, using)
@@ -125,6 +134,7 @@ class FunctionCollection(Exposure):
         self._functions.sort(key=lambda x: x.NewName)
         cxxConfig = self._generator.CxxConfig
         tag = self._generator.Tag
+        self._nameList = [self._nameList[0], '_global_functions']
         name = self.NameList[0] + '_global_functions'
         self.UpdateDefine([name])
         self._fname = cxxConfig.Func.format(tag + '_' + name)

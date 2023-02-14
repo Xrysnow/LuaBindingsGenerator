@@ -360,7 +360,7 @@ class Callable(Type):
             参数：
                     simple      是否使用简便生成（直接使用函数指针）。
             """
-            if not self._supported:
+            if not self.Supported:
                 return ""
             implList = []
             if noCast:
@@ -437,7 +437,7 @@ class Callable(Type):
 
         @property
         def Supported(self):
-            return self._supported
+            return self._supported and self.IsGeneratable()
 
         @property
         def Default(self):
@@ -461,6 +461,9 @@ class Callable(Type):
         @property
         def Cursor(self):
             return self._cursor
+
+        def IsGeneratable(self):
+            return True
 
     _ImplType = Implementation
 

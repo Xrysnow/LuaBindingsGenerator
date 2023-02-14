@@ -316,3 +316,29 @@ class BaseConfig(object):
                         return False
 
         return True
+
+    def FunctionGeneratable(self, className: str, memberName: str, args: List[str]) -> bool:
+        if not className:
+            return False
+        for s in args:
+            if s in self.InvalidArgTypes:
+                return False
+        for cName in self.SkipOverloads:
+            if re.match("^" + cName + "$", className):
+                # 在跳过列表中。
+                break
+        else:
+            return True
+        argsList = None
+        for clz, members in self.SkipOverloads.items():
+            if re.match("^" + clz + "$", className):
+                for mem, lst in members.items():
+                    if re.match("^" + mem + "$", memberName):
+                        argsList = lst
+                        break
+                if argsList:
+                    break
+        if not argsList:
+            return True
+        signature = ','.join(args)
+        return signature not in argsList

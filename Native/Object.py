@@ -309,7 +309,8 @@ class Object(Wrapper):
         class Implementation(Callable.Implementation):
             """成员函数的实现类。"""
 
-            def __init__(self, callable: "Callable", args: List[str], originArgs: List[str], argNames: List[str],
+            def __init__(self, callable: "Callable",
+                         args: List[str], originArgs: List[str], argNames: List[str],
                          res: str, default: bool,
                          supported: bool) -> None:
                 super().__init__(callable, args, originArgs, argNames, res, default, supported)
@@ -340,6 +341,10 @@ class Object(Wrapper):
             @property
             def PureVirtual(self):
                 return self._pureVirtual
+
+            def IsGeneratable(self):
+                parent: Object.Function = self._callable
+                return parent.Generator.FunctionGeneratable(parent._obj.Name, parent.Name, self.Args)
 
             def Implement(self, simple=False, noCast=False) -> str:
                 implList = []
@@ -412,6 +417,10 @@ class Object(Wrapper):
                          supported: bool) -> None:
                 super().__init__(callable, args, originArgs, argNames, res, default, supported)
 
+            def IsGeneratable(self):
+                parent: Object.Function = self._callable
+                return parent.Generator.FunctionGeneratable(parent._obj.Name, parent.Name, self.Args)
+
             def Implement(self, simple=False, noCast=False) -> str:
                 obj: Object = self._callable._obj
                 if self._callable.Name in obj._allProtected:
@@ -451,6 +460,10 @@ class Object(Wrapper):
 
         class Implementation(Callable.Implementation):
             """构造函数的实现类。"""
+
+            def IsGeneratable(self):
+                parent: Object.Function = self._callable
+                return parent.Generator.FunctionGeneratable(parent._obj.Name, parent.Name, self.Args)
 
             def Implement(self, simple=False, noCast=False) -> str:
                 implList = ["[]("]
