@@ -352,6 +352,9 @@ class Object(Wrapper):
                 objName = obj._wholeName
                 if self._callable.Name in obj._allProtected:
                     noCast = False
+                if self.IsVariadic():
+                    noCast = False
+                    simple = False
                 if noCast:
                     implList.append("&" + self._callable._wholeName)
                 elif simple or not self._default:
@@ -373,19 +376,8 @@ class Object(Wrapper):
                     for idx, arg in enumerate(self._args):
                         argList.append(arg + " " + "arg" + str(idx))
                     implList.append(",".join(argList))
-                    implList.append("){{return obj->")
-                    implList.append(self._callable._name)
-
-                    argList.clear()
-                    implList.append("(")
-                    for idx in range(len(self._args)):
-                        pr = arg[-1] == "&" or arg[-1] == "*"
-                        if pr:
-                            # 使用指针或引用时省略移动语义。
-                            argList.append("arg" + str(idx))
-                        else:
-                            argList.append("std::move(arg" + str(idx) + ")")
-                    implList.append(",".join(argList))
+                    implList.append("){{return obj->" + self._callable._name + "(")
+                    implList.append(self.GetLambdaInvokeArgs(self._args))
                     implList.append(");}}")
                 return "".join(implList)
 
@@ -471,19 +463,8 @@ class Object(Wrapper):
                 for idx, arg in enumerate(self._args):
                     argList.append(arg + " " + "arg" + str(idx))
                 implList.append(",".join(argList))
-                implList.append("){{return new ")
-                implList.append(self._callable._prefixName)
-
-                argList.clear()
-                implList.append("(")
-                for idx in range(len(self._args)):
-                    pr = arg[-1] == "&" or arg[-1] == "*"
-                    if pr:
-                        # 使用指针或引用时省略移动语义。
-                        argList.append("arg" + str(idx))
-                    else:
-                        argList.append("std::move(arg" + str(idx) + ")")
-                implList.append(",".join(argList))
+                implList.append("){{return new " + self._callable._prefixName + "(")
+                implList.append(self.GetLambdaInvokeArgs(self._args))
                 implList.append(");}}")
                 return "".join(implList)
 

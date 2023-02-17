@@ -363,6 +363,9 @@ class Callable(Type):
             if not self.Supported:
                 return ""
             implList = []
+            if self.IsVariadic():
+                noCast = False
+                simple = False
             if noCast:
                 implList.append("&" + self._callable._wholeName)
             elif simple:
@@ -375,21 +378,26 @@ class Callable(Type):
                 for idx, arg in enumerate(self._args):
                     argList.append(arg + " " + "arg" + str(idx))
                 implList.append(",".join(argList))
-                implList.append("){{return ")
-                implList.append(self._callable._wholeName)
-
-                argList.clear()
-                implList.append("(")
-                for idx, arg in enumerate(self._args):
-                    pr = arg[-1] == "&" or arg[-1] == "*"
-                    if pr:
-                        # 使用指针或引用时省略移动语义。
-                        argList.append("arg" + str(idx))
-                    else:
-                        argList.append("std::move(arg" + str(idx) + ")")
-                implList.append(",".join(argList))
+                implList.append("){{return " + self._callable._wholeName + "(")
+                implList.append(self.GetLambdaInvokeArgs(self._args))
                 implList.append(");}}")
             return "".join(implList)
+
+        def GetLambdaInvokeArgs(self, args):
+            argList = []
+            for idx, arg in enumerate(self._args):
+                if self.IsVariadic() and idx == len(self._args) - 1:
+                    # 可变参数视为字符串格式化
+                    argList.append('"%s"')
+                    argList.append("arg" + str(idx))
+                    break
+                pr = arg[-1] == "&" or arg[-1] == "*"
+                if pr:
+                    # 使用指针或引用时省略移动语义。
+                    argList.append("arg" + str(idx))
+                else:
+                    argList.append("std::move(arg" + str(idx) + ")")
+            return ",".join(argList)
 
         def GetArgumentDocs(self):
             doc = []
@@ -462,6 +470,9 @@ class Callable(Type):
         def Cursor(self):
             return self._cursor
 
+        def IsVariadic(self):
+            return self._cursor.type.is_function_variadic()
+
         def IsGeneratable(self):
             return True
 
@@ -488,16 +499,20 @@ class Callable(Type):
         pcomment = {}
         clz = self.__class__
         try:
-            if cursor.type.is_function_variadic():
-                # 不定参不可用。
-                supported = False
-
             for arg in cursor.type.argument_types():
                 if arg.kind == cindex.TypeKind.RVALUEREFERENCE:
                     # 右值引用不可用。
                     supported = False
                 args.append(CursorHelper.GetArgName(arg))
                 originArgs.append(CursorHelper.GetArgName(arg, True))
+
+            if cursor.type.is_function_variadic():
+                if args[-1] == 'const char*':
+                    supported = True
+                else:
+                    # 不定参不可用。
+                    supported = False
+
             argNames = CursorHelper.GetArgSpellings(cursor)
             result = CursorHelper.GetArgName(cursor.result_type, True)
             # comment = self.ParseComment(cursor.raw_comment)
