@@ -89,15 +89,23 @@ class Object(Wrapper):
             """
             cxxConfig = self._generator.CxxConfig
             hintName = '.'.join(self._obj.NameList) + '.' + self.NewName
+            isBitfield = self.Cursor.is_bitfield()
             s = [
                 'int {}({} lua_S)'.format(self._getterName, cxxConfig.LuaType),
                 '{',
                 '\tLUA_CUR_FNAME("{}/getter");'.format(hintName),
                 '\tauto cobj = LUA_TO_COBJ({}*, 1);'.format(self._obj.WholeName),
-                '\tLUA_PUSH_NATIVE(cobj->{});'.format(self._name),
-                '\treturn 1;',
-                '}',
             ]
+            if isBitfield:
+                s += [
+                    '\tconst auto cval = cobj->{};'.format(self._name),
+                    '\tLUA_PUSH_NATIVE(cval);',
+                ]
+            else:
+                s += [
+                    '\tLUA_PUSH_NATIVE(cobj->{});'.format(self._name),
+                ]
+            s += ['\treturn 1;', '}', ]
             ret = "\n".join(s)
             if not self._readonly:
                 s = [
@@ -105,10 +113,18 @@ class Object(Wrapper):
                     '{',
                     '\tLUA_CUR_FNAME("{}/setter");'.format(hintName),
                     '\tauto cobj = LUA_TO_COBJ({}*, 1);'.format(self._obj.WholeName),
-                    '\tLUA_NATIVE_SETTER(cobj->{}, 2);'.format(self._name),
-                    '\treturn 0;',
-                    '}',
                 ]
+                if isBitfield:
+                    s += [
+                        '\tauto cval = cobj->{};'.format(self._name),
+                        '\tLUA_NATIVE_SETTER(cval, 2);'.format(self._name),
+                        '\tcobj->{} = cval;'.format(self._name),
+                    ]
+                else:
+                    s += [
+                        '\tLUA_NATIVE_SETTER(cobj->{}, 2);'.format(self._name),
+                    ]
+                s += ['\treturn 0;', '}', ]
                 ret += "\n{}".format('\n'.join(s))
             return ret
 
