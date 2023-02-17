@@ -537,6 +537,9 @@ class Callable(Type):
             result = "void"
             minArgs = 0
 
+        # 使实现类获得正确的cursor
+        oldCursor = self._cursor
+        self._cursor = cursor
         # 具有（最大参数数量-最小参数数量+1）种实现。
         # 且参数数量越长的实现在越靠前（sol重载以先查找先匹配的原则决定重载）。
         for index in range(len(args) - minArgs + 1):
@@ -553,6 +556,7 @@ class Callable(Type):
                 impl.AddParamComment(k, v)
             retImpl.append(impl)
 
+        self._cursor = oldCursor
         return retImpl
 
     def __lshift__(self, p: "cindex.Cursor | Implementation | Callable"):
